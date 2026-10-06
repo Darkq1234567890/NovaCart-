@@ -8,6 +8,7 @@ const userRoutes = require("./src/routes/users/userRoutes");
 const healthRoutes = require("./src/routes/health/healthRoutes");
 const productRoutes = require("./src/routes/products/productRoutes");
 const categoryRoutes = require("./src/routes/categories/categoryRoutes");
+const vendorRoutes = require("./src/routes/vendors/vendorRoutes");
 const connectDatabase = require("./src/config/database");
 
 dotenv.config();
@@ -41,6 +42,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/health", healthRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/vendors", vendorRoutes);
 // Health check
 app.get("/api/health", (req, res) => {
   res.status(200).json({
