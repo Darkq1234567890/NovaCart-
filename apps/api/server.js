@@ -5,6 +5,7 @@ const morgan = require("morgan");
 const dotenv = require("dotenv");
 const authRoutes = require("./src/routes/auth/authRoutes");
 const userRoutes = require("./src/routes/users/userRoutes");
+const healthRoutes = require("./src/routes/health/healthRoutes");
 const connectDatabase = require("./src/config/database");
 
 dotenv.config();
@@ -35,6 +36,7 @@ app.use(morgan("dev"));
 // Authentication routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/health", healthRoutes);
 // Health check
 app.get("/api/health", (req, res) => {
   res.status(200).json({
