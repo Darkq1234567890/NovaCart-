@@ -81,10 +81,7 @@ const createProduct = async (req, res) => {
       images: images || [],
       price,
       compareAtPrice: compareAtPrice ?? null,
-
-      // Internal cost price is stored but never returned publicly.
       costPrice: costPrice ?? null,
-
       currency: currency || "INR",
       stock: stock ?? 0,
       lowStockThreshold: lowStockThreshold ?? 5,
@@ -164,6 +161,7 @@ const getProducts = async (req, res) => {
     }
 
     const pageNumber = Math.max(Number(page), 1);
+
     const limitNumber = Math.min(
       Math.max(Number(limit), 1),
       100
@@ -313,7 +311,10 @@ const updateProduct = async (req, res) => {
       }
     }
 
-    if (updates.slug !== undefined || updates.sku !== undefined) {
+    if (
+      updates.slug !== undefined ||
+      updates.sku !== undefined
+    ) {
       const duplicateFilter = {
         _id: { $ne: req.params.id },
         $or: []
@@ -338,7 +339,8 @@ const updateProduct = async (req, res) => {
       if (duplicateProduct) {
         return res.status(409).json({
           success: false,
-          message: "Another product already uses this slug or SKU"
+          message:
+            "Another product already uses this slug or SKU"
         });
       }
     }
@@ -403,9 +405,9 @@ const deleteProduct = async (req, res) => {
   } catch (error) {
     console.error("Delete product error:", error);
 
-    res.status(200).json({
-      success: true,
-      message: "Product removed successfully"
+    res.status(500).json({
+      success: false,
+      message: "Unable to remove product"
     });
   }
 };
@@ -417,20 +419,3 @@ module.exports = {
   updateProduct,
   deleteProduct
 };
-
-Important: In the "deleteProduct" catch block above, I intentionally need to correct one thing before you save: it should return 500, not 200.
-
-So use this exact catch block:
-
-  } catch (error) {
-    console.error("Delete product error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Unable to remove product"
-    });
-  }
-
-Replace the old entire controller with the corrected version, save, commit, and wait for Render to deploy.
-
-Then reply Done.
