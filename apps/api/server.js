@@ -4,6 +4,10 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const dotenv = require("dotenv");
 
+const connectDatabase = require("./src/config/database");
+
+dotenv.config();
+
 dotenv.config();
 
 const app = express();
