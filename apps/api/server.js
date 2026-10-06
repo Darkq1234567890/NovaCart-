@@ -67,6 +67,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`NovaCart API running on port ${PORT}`);
-});
+const startServer = async () => {
+  await connectDatabase();
+
+  app.listen(PORT, () => {
+    console.log(`NovaCart API running on port ${PORT}`);
+  });
+};
+
+startServer();
