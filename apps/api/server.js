@@ -6,6 +6,7 @@ const dotenv = require("dotenv");
 const authRoutes = require("./src/routes/auth/authRoutes");
 const userRoutes = require("./src/routes/users/userRoutes");
 const healthRoutes = require("./src/routes/health/healthRoutes");
+const productRoutes = require("./src/routes/products/productRoutes");
 const connectDatabase = require("./src/config/database");
 
 dotenv.config();
@@ -37,6 +38,7 @@ app.use(morgan("dev"));
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/health", healthRoutes);
+app.use("/api/products", productRoutes);
 // Health check
 app.get("/api/health", (req, res) => {
   res.status(200).json({
