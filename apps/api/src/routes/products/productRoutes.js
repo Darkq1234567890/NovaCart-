@@ -9,7 +9,7 @@ const {
 } = require("../../controllers/products/productController");
 
 const { protect } = require("../../middleware/auth/authMiddleware");
-
+const { authorizeRoles } = require("../../middleware/roles/roleMiddleware");
 const router = express.Router();
 
 // Get all active products
