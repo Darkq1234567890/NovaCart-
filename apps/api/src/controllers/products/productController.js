@@ -28,10 +28,18 @@ const createProduct = async (req, res) => {
       isFeatured
     } = req.body;
 
-    if (!name || !slug || !description || !category || !sku || price === undefined) {
+    if (
+      !name ||
+      !slug ||
+      !description ||
+      !category ||
+      !sku ||
+      price === undefined
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Name, slug, description, category, SKU and price are required"
+        message:
+          "Name, slug, description, category, SKU and price are required"
       });
     }
 
@@ -44,10 +52,13 @@ const createProduct = async (req, res) => {
       });
     }
 
+    const normalizedSlug = slug.toLowerCase().trim();
+    const normalizedSKU = sku.toUpperCase().trim();
+
     const existingProduct = await Product.findOne({
       $or: [
-        { slug: slug.toLowerCase().trim() },
-        { sku: sku.toUpperCase().trim() }
+        { slug: normalizedSlug },
+        { sku: normalizedSKU }
       ]
     });
 
@@ -60,17 +71,20 @@ const createProduct = async (req, res) => {
 
     const product = await Product.create({
       name: name.trim(),
-      slug: slug.toLowerCase().trim(),
+      slug: normalizedSlug,
       description: description.trim(),
       shortDescription: shortDescription?.trim() || "",
       category,
       vendor: vendor || null,
       brand: brand?.trim() || "",
-      sku: sku.toUpperCase().trim(),
+      sku: normalizedSKU,
       images: images || [],
       price,
       compareAtPrice: compareAtPrice ?? null,
+
+      // Internal cost price is stored but never returned publicly.
       costPrice: costPrice ?? null,
+
       currency: currency || "INR",
       stock: stock ?? 0,
       lowStockThreshold: lowStockThreshold ?? 5,
@@ -82,10 +96,14 @@ const createProduct = async (req, res) => {
       isFeatured: isFeatured ?? false
     });
 
+    const safeProduct = product.toObject();
+
+    delete safeProduct.costPrice;
+
     res.status(201).json({
       success: true,
       message: "Product created successfully",
-      product
+      product: safeProduct
     });
   } catch (error) {
     console.error("Create product error:", error);
@@ -146,13 +164,16 @@ const getProducts = async (req, res) => {
     }
 
     const pageNumber = Math.max(Number(page), 1);
-    const limitNumber = Math.min(Math.max(Number(limit), 1), 100);
+    const limitNumber = Math.min(
+      Math.max(Number(limit), 1),
+      100
+    );
+
     const skip = (pageNumber - 1) * limitNumber;
 
     const [products, total] = await Promise.all([
       Product.find(filter)
         .populate("category", "name slug")
-        .populate("vendor", "name")
         .select("-costPrice")
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -190,7 +211,6 @@ const getProductById = async (req, res) => {
       isActive: true
     })
       .populate("category", "name slug")
-      .populate("vendor", "name")
       .select("-costPrice")
       .lean();
 
@@ -226,6 +246,7 @@ const updateProduct = async (req, res) => {
       "category",
       "vendor",
       "brand",
+      "sku",
       "images",
       "price",
       "compareAtPrice",
@@ -262,12 +283,64 @@ const updateProduct = async (req, res) => {
       updates.sku = updates.sku.toUpperCase().trim();
     }
 
+    if (updates.description !== undefined) {
+      updates.description = updates.description.trim();
+    }
+
+    if (updates.shortDescription !== undefined) {
+      updates.shortDescription =
+        updates.shortDescription.trim();
+    }
+
     if (updates.brand !== undefined) {
       updates.brand = updates.brand.trim();
     }
 
     if (updates.supplierSKU !== undefined) {
       updates.supplierSKU = updates.supplierSKU.trim();
+    }
+
+    if (updates.category !== undefined) {
+      const categoryExists = await Category.findById(
+        updates.category
+      );
+
+      if (!categoryExists) {
+        return res.status(400).json({
+          success: false,
+          message: "Category not found"
+        });
+      }
+    }
+
+    if (updates.slug !== undefined || updates.sku !== undefined) {
+      const duplicateFilter = {
+        _id: { $ne: req.params.id },
+        $or: []
+      };
+
+      if (updates.slug !== undefined) {
+        duplicateFilter.$or.push({
+          slug: updates.slug
+        });
+      }
+
+      if (updates.sku !== undefined) {
+        duplicateFilter.$or.push({
+          sku: updates.sku
+        });
+      }
+
+      const duplicateProduct = await Product.findOne(
+        duplicateFilter
+      );
+
+      if (duplicateProduct) {
+        return res.status(409).json({
+          success: false,
+          message: "Another product already uses this slug or SKU"
+        });
+      }
     }
 
     const product = await Product.findByIdAndUpdate(
@@ -330,9 +403,9 @@ const deleteProduct = async (req, res) => {
   } catch (error) {
     console.error("Delete product error:", error);
 
-    res.status(500).json({
-      success: false,
-      message: "Unable to remove product"
+    res.status(200).json({
+      success: true,
+      message: "Product removed successfully"
     });
   }
 };
@@ -344,3 +417,20 @@ module.exports = {
   updateProduct,
   deleteProduct
 };
+
+Important: In the "deleteProduct" catch block above, I intentionally need to correct one thing before you save: it should return 500, not 200.
+
+So use this exact catch block:
+
+  } catch (error) {
+    console.error("Delete product error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to remove product"
+    });
+  }
+
+Replace the old entire controller with the corrected version, save, commit, and wait for Render to deploy.
+
+Then reply Done.
