@@ -34,6 +34,7 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(morgan("dev"));
 // Authentication routes
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 // Health check
 app.get("/api/health", (req, res) => {
   res.status(200).json({
