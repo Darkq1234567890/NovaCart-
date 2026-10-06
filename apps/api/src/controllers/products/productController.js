@@ -1,5 +1,6 @@
 const Product = require("../../models/Product/Product");
 const Category = require("../../models/Category/Category");
+const Vendor = require("../../models/Vendor/Vendor");
 
 // CREATE PRODUCT
 const createProduct = async (req, res) => {
@@ -69,13 +70,58 @@ const createProduct = async (req, res) => {
       });
     }
 
+    let productVendor = null;
+
+    // Vendors automatically get their own vendor profile.
+    // They cannot choose another vendor.
+    if (req.user.role === "vendor") {
+      const vendorProfile = await Vendor.findOne({
+        user: req.user._id
+      });
+
+      if (!vendorProfile) {
+        return res.status(404).json({
+          success: false,
+          message: "Vendor profile not found"
+        });
+      }
+
+      if (vendorProfile.status !== "active") {
+        return res.status(403).json({
+          success: false,
+          message: "Your vendor account is not active"
+        });
+      }
+
+      productVendor = vendorProfile._id;
+    }
+
+    // Admin/Super Admin can assign a vendor.
+    if (
+      req.user.role === "admin" ||
+      req.user.role === "super_admin"
+    ) {
+      if (vendor) {
+        const vendorExists = await Vendor.findById(vendor);
+
+        if (!vendorExists) {
+          return res.status(400).json({
+            success: false,
+            message: "Vendor not found"
+          });
+        }
+
+        productVendor = vendorExists._id;
+      }
+    }
+
     const product = await Product.create({
       name: name.trim(),
       slug: normalizedSlug,
       description: description.trim(),
       shortDescription: shortDescription?.trim() || "",
       category,
-      vendor: vendor || null,
+      vendor: productVendor,
       brand: brand?.trim() || "",
       sku: normalizedSKU,
       images: images || [],
@@ -172,6 +218,10 @@ const getProducts = async (req, res) => {
     const [products, total] = await Promise.all([
       Product.find(filter)
         .populate("category", "name slug")
+        .populate(
+          "vendor",
+          "storeName storeSlug status isVerified"
+        )
         .select("-costPrice")
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -209,6 +259,10 @@ const getProductById = async (req, res) => {
       isActive: true
     })
       .populate("category", "name slug")
+      .populate(
+        "vendor",
+        "storeName storeSlug status isVerified"
+      )
       .select("-costPrice")
       .lean();
 
@@ -236,13 +290,56 @@ const getProductById = async (req, res) => {
 // UPDATE PRODUCT
 const updateProduct = async (req, res) => {
   try {
+    const existingProduct = await Product.findById(
+      req.params.id
+    );
+
+    if (!existingProduct) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
+
+    // Vendor ownership check
+    if (req.user.role === "vendor") {
+      const vendorProfile = await Vendor.findOne({
+        user: req.user._id
+      });
+
+      if (!vendorProfile) {
+        return res.status(404).json({
+          success: false,
+          message: "Vendor profile not found"
+        });
+      }
+
+      if (vendorProfile.status !== "active") {
+        return res.status(403).json({
+          success: false,
+          message: "Your vendor account is not active"
+        });
+      }
+
+      if (
+        !existingProduct.vendor ||
+        existingProduct.vendor.toString() !==
+          vendorProfile._id.toString()
+      ) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "You do not have permission to update this product"
+        });
+      }
+    }
+
     const allowedFields = [
       "name",
       "slug",
       "description",
       "shortDescription",
       "category",
-      "vendor",
       "brand",
       "sku",
       "images",
@@ -268,6 +365,9 @@ const updateProduct = async (req, res) => {
         updates[field] = req.body[field];
       }
     }
+
+    // Vendors cannot change product ownership.
+    // The vendor field is deliberately excluded from allowedFields.
 
     if (updates.name !== undefined) {
       updates.name = updates.name.trim();
@@ -353,15 +453,12 @@ const updateProduct = async (req, res) => {
         runValidators: true
       }
     )
+      .populate(
+        "vendor",
+        "storeName storeSlug status isVerified"
+      )
       .select("-costPrice")
       .lean();
-
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found"
-      });
-    }
 
     res.status(200).json({
       success: true,
@@ -381,6 +478,50 @@ const updateProduct = async (req, res) => {
 // SOFT DELETE PRODUCT
 const deleteProduct = async (req, res) => {
   try {
+    const existingProduct = await Product.findById(
+      req.params.id
+    );
+
+    if (!existingProduct) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
+
+    // Vendor ownership check
+    if (req.user.role === "vendor") {
+      const vendorProfile = await Vendor.findOne({
+        user: req.user._id
+      });
+
+      if (!vendorProfile) {
+        return res.status(404).json({
+          success: false,
+          message: "Vendor profile not found"
+        });
+      }
+
+      if (vendorProfile.status !== "active") {
+        return res.status(403).json({
+          success: false,
+          message: "Your vendor account is not active"
+        });
+      }
+
+      if (
+        !existingProduct.vendor ||
+        existingProduct.vendor.toString() !==
+          vendorProfile._id.toString()
+      ) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "You do not have permission to remove this product"
+        });
+      }
+    }
+
     const product = await Product.findByIdAndUpdate(
       req.params.id,
       {
