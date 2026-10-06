@@ -3,7 +3,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const dotenv = require("dotenv");
-
+const authRoutes = require("./src/routes/auth/authRoutes");
 const connectDatabase = require("./src/config/database");
 
 dotenv.config();
@@ -31,7 +31,8 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Logging
 app.use(morgan("dev"));
-
+// Authentication routes
+app.use("/api/auth", authRoutes);
 // Health check
 app.get("/api/health", (req, res) => {
   res.status(200).json({
