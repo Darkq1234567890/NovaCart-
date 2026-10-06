@@ -4,7 +4,8 @@ const { protect } = require("../../middleware/auth/authMiddleware");
 
 const {
   getMyProfile,
-  updateMyProfile
+  updateMyProfile,
+  changePassword
 } = require("../../controllers/users/userController");
 
 const router = express.Router();
@@ -14,5 +15,8 @@ router.get("/me", protect, getMyProfile);
 
 // Update logged-in user's profile
 router.put("/me", protect, updateMyProfile);
+
+// Change logged-in user's password
+router.put("/change-password", protect, changePassword);
 
 module.exports = router;
