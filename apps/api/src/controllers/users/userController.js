@@ -133,7 +133,8 @@ const changePassword = async (req, res) => {
     if (samePassword) {
       return res.status(400).json({
         success: false,
-        message: "New password must be different from current password"
+        message:
+          "New password must be different from current password"
       });
     }
 
@@ -155,8 +156,71 @@ const changePassword = async (req, res) => {
   }
 };
 
+// GET ALL USERS - ADMIN ONLY
+const getUsers = async (req, res) => {
+  try {
+    const {
+      role,
+      status,
+      page = 1,
+      limit = 20
+    } = req.query;
+
+    const filter = {};
+
+    if (role) {
+      filter.role = role;
+    }
+
+    if (status) {
+      filter.status = status;
+    }
+
+    const pageNumber = Math.max(Number(page), 1);
+
+    const limitNumber = Math.min(
+      Math.max(Number(limit), 1),
+      100
+    );
+
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const [users, total] = await Promise.all([
+      User.find(filter)
+        .select(
+          "_id name email phone role status avatar isEmailVerified isPhoneVerified createdAt updatedAt"
+        )
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNumber)
+        .lean(),
+
+      User.countDocuments(filter)
+    ]);
+
+    res.status(200).json({
+      success: true,
+      users,
+      pagination: {
+        page: pageNumber,
+        limit: limitNumber,
+        total,
+        totalPages: Math.ceil(total / limitNumber)
+      }
+    });
+  } catch (error) {
+    console.error("Get users error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to fetch users"
+    });
+  }
+};
+
 module.exports = {
   getMyProfile,
   updateMyProfile,
-  changePassword
+  changePassword,
+  getUsers
 };
