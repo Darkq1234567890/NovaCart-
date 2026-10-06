@@ -6,7 +6,8 @@ const {
   getVendorById,
   getMyVendorProfile,
   updateVendor,
-  updateVendorStatus
+  updateVendorStatus,
+  promoteUserToVendor
 } = require("../../controllers/vendors/vendorController");
 
 const { protect } = require("../../middleware/auth/authMiddleware");
@@ -50,7 +51,7 @@ router.post(
 router.put(
   "/:id",
   protect,
-  authorizeRoles("admin", "super_admin", "vendor"),
+  authorizeRoles("admin", "super_admin"),
   updateVendor
 );
 
@@ -60,6 +61,14 @@ router.patch(
   protect,
   authorizeRoles("admin", "super_admin"),
   updateVendorStatus
+);
+
+// Promote an existing user to vendor
+router.patch(
+  "/users/promote",
+  protect,
+  authorizeRoles("admin", "super_admin"),
+  promoteUserToVendor
 );
 
 module.exports = router;
