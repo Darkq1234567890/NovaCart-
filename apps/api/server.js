@@ -4,6 +4,7 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const dotenv = require("dotenv");
 const authRoutes = require("./src/routes/auth/authRoutes");
+const userRoutes = require("./src/routes/users/userRoutes");
 const connectDatabase = require("./src/config/database");
 
 dotenv.config();
