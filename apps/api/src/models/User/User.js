@@ -3,10 +3,11 @@ const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema(
   {
     name: {
-      type: String,
-      trim: true,
-      maxlength: 100
-    },
+  type: String,
+  trim: true,
+  maxlength: 100,
+  default: ""
+},
 
     email: {
       type: String,
