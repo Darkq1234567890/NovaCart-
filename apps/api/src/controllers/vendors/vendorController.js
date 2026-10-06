@@ -40,8 +40,7 @@ const createVendor = async (req, res) => {
     if (userExists.role !== "vendor") {
       return res.status(400).json({
         success: false,
-        message:
-          "The selected user must have the vendor role"
+        message: "The selected user must have the vendor role"
       });
     }
 
@@ -222,8 +221,7 @@ const getMyVendorProfile = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message:
-        "Unable to fetch your vendor profile"
+      message: "Unable to fetch your vendor profile"
     });
   }
 };
@@ -413,8 +411,74 @@ const updateVendorStatus = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message:
-        "Unable to update vendor status"
+      message: "Unable to update vendor status"
+    });
+  }
+};
+
+// PROMOTE USER TO VENDOR
+const promoteUserToVendor = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required"
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    if (user.role === "vendor") {
+      return res.status(409).json({
+        success: false,
+        message: "User is already a vendor"
+      });
+    }
+
+    if (
+      user.role === "super_admin" ||
+      user.role === "admin"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Admin users cannot be converted to vendors"
+      });
+    }
+
+    user.role = "vendor";
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "User promoted to vendor successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        status: user.status
+      }
+    });
+  } catch (error) {
+    console.error(
+      "Promote user to vendor error:",
+      error
+    );
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to promote user to vendor"
     });
   }
 };
@@ -425,5 +489,6 @@ module.exports = {
   getVendorById,
   getMyVendorProfile,
   updateVendor,
-  updateVendorStatus
+  updateVendorStatus,
+  promoteUserToVendor
 };
