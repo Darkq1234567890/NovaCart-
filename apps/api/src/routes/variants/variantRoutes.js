@@ -5,7 +5,8 @@ createVariant,
 getProductVariants,
 getVariantById,
 updateVariant,
-deleteVariant
+deleteVariant,
+restoreVariant
 } = require("../../controllers/variants/variantController");
 
 const { protect } = require("../../middleware/auth/authMiddleware");
@@ -47,6 +48,14 @@ router.delete(
 protect,
 authorizeRoles("admin", "super_admin", "vendor"),
 deleteVariant
+);
+
+// Restore a variant
+router.patch(
+"/:id/restore",
+protect,
+authorizeRoles("admin", "super_admin", "vendor"),
+restoreVariant
 );
 
 module.exports = router;
