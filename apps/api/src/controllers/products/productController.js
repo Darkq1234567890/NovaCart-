@@ -290,8 +290,6 @@ const filter = {
   vendor: vendorProfile._id
 };
 
-// By default, vendor dashboard shows active products.
-// active=false can be used to view inactive products.
 if (active === "false") {
   filter.isActive = false;
 } else {
@@ -426,7 +424,6 @@ if (!existingProduct) {
   });
 }
 
-// Vendor ownership check
 if (req.user.role === "vendor") {
   const vendorProfile = await Vendor.findOne({
     user: req.user._id
@@ -613,7 +610,6 @@ if (!existingProduct) {
   });
 }
 
-// Vendor ownership check
 if (req.user.role === "vendor") {
   const vendorProfile = await Vendor.findOne({
     user: req.user._id
@@ -679,11 +675,101 @@ res.status(500).json({
 }
 };
 
+// RESTORE PRODUCT
+const restoreProduct = async (req, res) => {
+try {
+const existingProduct = await Product.findById(
+req.params.id
+);
+
+if (!existingProduct) {
+  return res.status(404).json({
+    success: false,
+    message: "Product not found"
+  });
+}
+
+// Vendor ownership check
+if (req.user.role === "vendor") {
+  const vendorProfile = await Vendor.findOne({
+    user: req.user._id
+  });
+
+  if (!vendorProfile) {
+    return res.status(404).json({
+      success: false,
+      message: "Vendor profile not found"
+    });
+  }
+
+  if (vendorProfile.status !== "active") {
+    return res.status(403).json({
+      success: false,
+      message: "Your vendor account is not active"
+    });
+  }
+
+  if (
+    !existingProduct.vendor ||
+    existingProduct.vendor.toString() !==
+      vendorProfile._id.toString()
+  ) {
+    return res.status(403).json({
+      success: false,
+      message:
+        "You do not have permission to restore this product"
+    });
+  }
+}
+
+if (existingProduct.isActive) {
+  return res.status(400).json({
+    success: false,
+    message: "Product is already active"
+  });
+}
+
+existingProduct.isActive = true;
+
+await existingProduct.save();
+
+const product = await Product.findById(
+  existingProduct._id
+)
+  .populate(
+    "category",
+    "name slug"
+  )
+  .populate(
+    "vendor",
+    "storeName storeSlug status isVerified"
+  )
+  .select("-costPrice")
+  .lean();
+
+res.status(200).json({
+  success: true,
+  message: "Product restored successfully",
+  product
+});
+
+} catch (error) {
+console.error("Restore product error:", error);
+
+res.status(500).json({
+  success: false,
+  message: "Unable to restore product"
+});
+
+}
+};
+
 module.exports = {
 createProduct,
 getProducts,
 getMyVendorProducts,
 getProductById,
 updateProduct,
-deleteProduct
+deleteProduct,
+restoreProduct
 };
