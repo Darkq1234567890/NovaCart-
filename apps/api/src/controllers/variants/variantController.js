@@ -401,10 +401,109 @@ res.status(500).json({
 }
 };
 
+// RESTORE VARIANT
+const restoreVariant = async (req, res) => {
+try {
+const existingVariant = await Variant.findById(
+req.params.id
+);
+
+if (!existingVariant) {
+  return res.status(404).json({
+    success: false,
+    message: "Variant not found"
+  });
+}
+
+const product = await Product.findById(
+  existingVariant.product
+);
+
+if (!product) {
+  return res.status(404).json({
+    success: false,
+    message: "Product not found"
+  });
+}
+
+if (!product.isActive) {
+  return res.status(400).json({
+    success: false,
+    message: "Cannot restore a variant for an inactive product"
+  });
+}
+
+if (req.user.role === "vendor") {
+  const vendorProfile = await Vendor.findOne({
+    user: req.user._id
+  });
+
+  if (!vendorProfile) {
+    return res.status(404).json({
+      success: false,
+      message: "Vendor profile not found"
+    });
+  }
+
+  if (vendorProfile.status !== "active") {
+    return res.status(403).json({
+      success: false,
+      message: "Your vendor account is not active"
+    });
+  }
+
+  if (
+    !product.vendor ||
+    product.vendor.toString() !==
+      vendorProfile._id.toString()
+  ) {
+    return res.status(403).json({
+      success: false,
+      message:
+        "You do not have permission to restore this variant"
+    });
+  }
+}
+
+if (existingVariant.isActive) {
+  return res.status(400).json({
+    success: false,
+    message: "Variant is already active"
+  });
+}
+
+existingVariant.isActive = true;
+
+await existingVariant.save();
+
+const restoredVariant = await Variant.findById(
+  existingVariant._id
+)
+  .populate("product", "name slug sku")
+  .lean();
+
+res.status(200).json({
+  success: true,
+  message: "Variant restored successfully",
+  variant: restoredVariant
+});
+
+} catch (error) {
+console.error("Restore variant error:", error);
+
+res.status(500).json({
+  success: false,
+  message: "Unable to restore variant"
+});
+
+}
+};
+
 module.exports = {
 createVariant,
 getProductVariants,
 getVariantById,
 updateVariant,
-deleteVariant
+deleteVariant,
+restoreVariant
 };
