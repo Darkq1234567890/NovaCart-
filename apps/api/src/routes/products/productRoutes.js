@@ -6,7 +6,8 @@ getProducts,
 getMyVendorProducts,
 getProductById,
 updateProduct,
-deleteProduct
+deleteProduct,
+restoreProduct
 } = require("../../controllers/products/productController");
 
 const { protect } = require("../../middleware/auth/authMiddleware");
@@ -56,6 +57,14 @@ router.delete(
 protect,
 authorizeRoles("admin", "super_admin", "vendor"),
 deleteProduct
+);
+
+// Restore a deactivated product
+router.patch(
+"/:id/restore",
+protect,
+authorizeRoles("admin", "super_admin", "vendor"),
+restoreProduct
 );
 
 module.exports = router;
