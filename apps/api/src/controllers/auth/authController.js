@@ -59,7 +59,7 @@ const register = async (req, res) => {
 
     const token = createToken(user);
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Registration successful",
       token,
@@ -74,7 +74,7 @@ const register = async (req, res) => {
   } catch (error) {
     console.error("Registration error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Registration failed"
     });
@@ -130,7 +130,7 @@ const login = async (req, res) => {
 
     const token = createToken(user);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Login successful",
       token,
@@ -145,14 +145,77 @@ const login = async (req, res) => {
   } catch (error) {
     console.error("Login error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Login failed"
     });
   }
 };
 
+// TEMPORARY SUPER ADMIN: RESET A VENDOR PASSWORD
+const resetVendorPassword = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and new password are required"
+      });
+    }
+
+    if (typeof newPassword !== "string" || newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters"
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const user = await User.findOne({
+      email: normalizedEmail
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    if (user.role !== "vendor") {
+      return res.status(403).json({
+        success: false,
+        message: "This endpoint can reset vendor accounts only"
+      });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 12);
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Vendor password reset successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error("Vendor password reset error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to reset vendor password"
+    });
+  }
+};
+
 module.exports = {
   register,
-  login
+  login,
+  resetVendorPassword
 };
