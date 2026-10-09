@@ -1,509 +1,592 @@
+
 const Variant = require("../../models/Variant/Variant");
 const Product = require("../../models/Product/Product");
 const Vendor = require("../../models/Vendor/Vendor");
 
-// CREATE VARIANT
-const createVariant = async (req, res) => {
-try {
-const {
-product,
-name,
-sku,
-attributes,
-price,
-compareAtPrice,
-stock,
-lowStockThreshold,
-image
-} = req.body;
+const normalizeSKU = (sku) => sku.toUpperCase().trim();
 
-if (!product || !name || !sku) {
-  return res.status(400).json({
+const isValidNonNegativeNumber = (value) =>
+  typeof value === "number" &&
+  Number.isFinite(value) &&
+  value >= 0;
+
+const handleVariantError = (error, res, action) => {
+  console.error(`${action} variant error:`, error);
+
+  if (error.code === 11000) {
+    return res.status(409).json({
+      success: false,
+      message: "A variant with this SKU already exists"
+    });
+  }
+
+  if (error.name === "ValidationError" || error.name === "CastError") {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid variant data"
+    });
+  }
+
+  return res.status(500).json({
     success: false,
-    message: "Product, name and SKU are required"
+    message: `Unable to ${action} variant`
   });
-}
+};
 
-const existingProduct = await Product.findById(product);
-
-if (!existingProduct) {
-  return res.status(404).json({
-    success: false,
-    message: "Product not found"
-  });
-}
-
-if (!existingProduct.isActive) {
-  return res.status(400).json({
-    success: false,
-    message: "Cannot create a variant for an inactive product"
-  });
-}
-
-if (req.user.role === "vendor") {
+const getVendorProfileForUser = async (userId) => {
   const vendorProfile = await Vendor.findOne({
-    user: req.user._id
+    user: userId
   });
 
   if (!vendorProfile) {
-    return res.status(404).json({
-      success: false,
-      message: "Vendor profile not found"
-    });
+    return {
+      error: {
+        status: 404,
+        message: "Vendor profile not found"
+      }
+    };
   }
 
   if (vendorProfile.status !== "active") {
-    return res.status(403).json({
-      success: false,
-      message: "Your vendor account is not active"
-    });
+    return {
+      error: {
+        status: 403,
+        message: "Your vendor account is not active"
+      }
+    };
+  }
+
+  return { vendorProfile };
+};
+
+const checkProductPermission = async (req, product) => {
+  if (
+    req.user.role !== "vendor" &&
+    req.user.role !== "admin" &&
+    req.user.role !== "super_admin"
+  ) {
+    return {
+      status: 403,
+      message: "You do not have permission to manage variants"
+    };
+  }
+
+  if (req.user.role !== "vendor") {
+    return null;
+  }
+
+  const result = await getVendorProfileForUser(req.user._id);
+
+  if (result.error) {
+    return result.error;
   }
 
   if (
-    !existingProduct.vendor ||
-    existingProduct.vendor.toString() !==
-      vendorProfile._id.toString()
+    !product.vendor ||
+    product.vendor.toString() !==
+      result.vendorProfile._id.toString()
   ) {
-    return res.status(403).json({
-      success: false,
-      message:
-        "You do not have permission to create a variant for this product"
-    });
+    return {
+      status: 403,
+      message: "You do not have permission to manage variants for this product"
+    };
   }
-}
 
-const normalizedSKU = sku.toUpperCase().trim();
+  return null;
+};
 
-const existingVariant = await Variant.findOne({
-  sku: normalizedSKU
-});
+const validateVariantNumbers = (data) => {
+  const numericFields = [
+    "price",
+    "compareAtPrice",
+    "stock",
+    "lowStockThreshold"
+  ];
 
-if (existingVariant) {
-  return res.status(409).json({
-    success: false,
-    message: "A variant with this SKU already exists"
-  });
-}
+  for (const field of numericFields) {
+    if (data[field] === undefined || data[field] === null) {
+      continue;
+    }
 
-const variant = await Variant.create({
-  product: existingProduct._id,
-  name: name.trim(),
-  sku: normalizedSKU,
-  attributes: attributes || {},
-  price: price ?? null,
-  compareAtPrice: compareAtPrice ?? null,
-  stock: stock ?? 0,
-  lowStockThreshold: lowStockThreshold ?? 5,
-  image: image?.trim() || ""
-});
+    if (!isValidNonNegativeNumber(data[field])) {
+      return `${field} must be a non-negative number`;
+    }
+  }
 
-const populatedVariant = await Variant.findById(
-  variant._id
-)
-  .populate("product", "name slug sku")
-  .lean();
+  if (
+    data.price !== undefined &&
+    data.price !== null &&
+    data.compareAtPrice !== undefined &&
+    data.compareAtPrice !== null &&
+    data.compareAtPrice < data.price
+  ) {
+    return "compareAtPrice cannot be lower than price";
+  }
 
-res.status(201).json({
-  success: true,
-  message: "Variant created successfully",
-  variant: populatedVariant
-});
+  return null;
+};
 
-} catch (error) {
-console.error("Create variant error:", error);
+// CREATE VARIANT
+const createVariant = async (req, res) => {
+  try {
+    const {
+      product: productId,
+      name,
+      sku,
+      attributes,
+      price,
+      compareAtPrice,
+      stock,
+      lowStockThreshold,
+      image
+    } = req.body;
 
-res.status(500).json({
-  success: false,
-  message: "Unable to create variant"
-});
+    if (
+      typeof productId !== "string" ||
+      typeof name !== "string" ||
+      !name.trim() ||
+      typeof sku !== "string" ||
+      !sku.trim()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Product, name and SKU are required"
+      });
+    }
 
-}
+    const numberError = validateVariantNumbers({
+      price,
+      compareAtPrice,
+      stock,
+      lowStockThreshold
+    });
+
+    if (numberError) {
+      return res.status(400).json({
+        success: false,
+        message: numberError
+      });
+    }
+
+    if (
+      attributes !== undefined &&
+      (
+        attributes === null ||
+        typeof attributes !== "object" ||
+        Array.isArray(attributes)
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Attributes must be an object"
+      });
+    }
+
+    if (image !== undefined && typeof image !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Image must be a string"
+      });
+    }
+
+    const existingProduct = await Product.findById(productId);
+
+    if (!existingProduct) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
+
+    if (!existingProduct.isActive) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot create a variant for an inactive product"
+      });
+    }
+
+    const permissionError = await checkProductPermission(
+      req,
+      existingProduct
+    );
+
+    if (permissionError) {
+      return res.status(permissionError.status).json({
+        success: false,
+        message: permissionError.message
+      });
+    }
+
+    const normalizedSKU = normalizeSKU(sku);
+
+    const existingVariant = await Variant.findOne({
+      sku: normalizedSKU
+    });
+
+    if (existingVariant) {
+      return res.status(409).json({
+        success: false,
+        message: "A variant with this SKU already exists"
+      });
+    }
+
+    const variant = await Variant.create({
+      product: existingProduct._id,
+      name: name.trim(),
+      sku: normalizedSKU,
+      attributes: attributes || {},
+      price: price ?? null,
+      compareAtPrice: compareAtPrice ?? null,
+      stock: stock ?? 0,
+      lowStockThreshold: lowStockThreshold ?? 5,
+      image: image?.trim() || ""
+    });
+
+    const populatedVariant = await Variant.findById(variant._id)
+      .populate("product", "name slug sku")
+      .lean();
+
+    return res.status(201).json({
+      success: true,
+      message: "Variant created successfully",
+      variant: populatedVariant
+    });
+  } catch (error) {
+    return handleVariantError(error, res, "create");
+  }
 };
 
 // GET VARIANTS FOR A PRODUCT
 const getProductVariants = async (req, res) => {
-try {
-const { productId } = req.params;
+  try {
+    const { productId } = req.params;
 
-const product = await Product.findOne({
-  _id: productId,
-  isActive: true
-});
+    const product = await Product.findOne({
+      _id: productId,
+      isActive: true
+    }).lean();
 
-if (!product) {
-  return res.status(404).json({
-    success: false,
-    message: "Product not found"
-  });
-}
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
 
-const variants = await Variant.find({
-  product: productId,
-  isActive: true
-})
-  .populate("product", "name slug sku")
-  .sort({ createdAt: 1 })
-  .lean();
+    const variants = await Variant.find({
+      product: productId,
+      isActive: true
+    })
+      .populate("product", "name slug sku")
+      .sort({ createdAt: 1 })
+      .lean();
 
-res.status(200).json({
-  success: true,
-  variants,
-  total: variants.length
-});
-
-} catch (error) {
-console.error("Get product variants error:", error);
-
-res.status(500).json({
-  success: false,
-  message: "Unable to fetch product variants"
-});
-
-}
+    return res.status(200).json({
+      success: true,
+      variants,
+      total: variants.length
+    });
+  } catch (error) {
+    return handleVariantError(error, res, "fetch");
+  }
 };
 
 // GET SINGLE VARIANT
 const getVariantById = async (req, res) => {
-try {
-const variant = await Variant.findOne({
-_id: req.params.id,
-isActive: true
-})
-.populate("product", "name slug sku")
-.lean();
+  try {
+    const variant = await Variant.findOne({
+      _id: req.params.id,
+      isActive: true
+    })
+      .populate("product", "name slug sku")
+      .lean();
 
-if (!variant) {
-  return res.status(404).json({
-    success: false,
-    message: "Variant not found"
-  });
-}
+    if (!variant || !variant.product) {
+      return res.status(404).json({
+        success: false,
+        message: "Variant not found"
+      });
+    }
 
-res.status(200).json({
-  success: true,
-  variant
-});
-
-} catch (error) {
-console.error("Get variant error:", error);
-
-res.status(500).json({
-  success: false,
-  message: "Unable to fetch variant"
-});
-
-}
+    return res.status(200).json({
+      success: true,
+      variant
+    });
+  } catch (error) {
+    return handleVariantError(error, res, "fetch");
+  }
 };
 
 // UPDATE VARIANT
 const updateVariant = async (req, res) => {
-try {
-const existingVariant = await Variant.findById(
-req.params.id
-);
+  try {
+    const existingVariant = await Variant.findById(req.params.id);
 
-if (!existingVariant) {
-  return res.status(404).json({
-    success: false,
-    message: "Variant not found"
-  });
-}
+    if (!existingVariant) {
+      return res.status(404).json({
+        success: false,
+        message: "Variant not found"
+      });
+    }
 
-const product = await Product.findById(
-  existingVariant.product
-);
+    const product = await Product.findById(existingVariant.product);
 
-if (!product) {
-  return res.status(404).json({
-    success: false,
-    message: "Product not found"
-  });
-}
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
 
-if (req.user.role === "vendor") {
-  const vendorProfile = await Vendor.findOne({
-    user: req.user._id
-  });
+    const permissionError = await checkProductPermission(req, product);
 
-  if (!vendorProfile) {
-    return res.status(404).json({
-      success: false,
-      message: "Vendor profile not found"
+    if (permissionError) {
+      return res.status(permissionError.status).json({
+        success: false,
+        message: permissionError.message
+      });
+    }
+
+    const allowedFields = [
+      "name",
+      "sku",
+      "attributes",
+      "price",
+      "compareAtPrice",
+      "stock",
+      "lowStockThreshold",
+      "image",
+      "isActive"
+    ];
+
+    const updates = {};
+
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    }
+
+    if (updates.name !== undefined) {
+      if (typeof updates.name !== "string" || !updates.name.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Name must be a non-empty string"
+        });
+      }
+
+      updates.name = updates.name.trim();
+    }
+
+    if (updates.sku !== undefined) {
+      if (typeof updates.sku !== "string" || !updates.sku.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "SKU must be a non-empty string"
+        });
+      }
+
+      updates.sku = normalizeSKU(updates.sku);
+
+      const duplicateVariant = await Variant.findOne({
+        _id: { $ne: req.params.id },
+        sku: updates.sku
+      });
+
+      if (duplicateVariant) {
+        return res.status(409).json({
+          success: false,
+          message: "Another variant already uses this SKU"
+        });
+      }
+    }
+
+    const numberError = validateVariantNumbers(updates);
+
+    if (numberError) {
+      return res.status(400).json({
+        success: false,
+        message: numberError
+      });
+    }
+
+    if (updates.attributes !== undefined) {
+      if (
+        updates.attributes === null ||
+        typeof updates.attributes !== "object" ||
+        Array.isArray(updates.attributes)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Attributes must be an object"
+        });
+      }
+    }
+
+    if (updates.image !== undefined) {
+      if (typeof updates.image !== "string") {
+        return res.status(400).json({
+          success: false,
+          message: "Image must be a string"
+        });
+      }
+
+      updates.image = updates.image.trim();
+    }
+
+    if (
+      updates.isActive !== undefined &&
+      typeof updates.isActive !== "boolean"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "isActive must be true or false"
+      });
+    }
+
+    const variant = await Variant.findByIdAndUpdate(
+      req.params.id,
+      updates,
+      {
+        new: true,
+        runValidators: true
+      }
+    )
+      .populate("product", "name slug sku")
+      .lean();
+
+    if (!variant) {
+      return res.status(404).json({
+        success: false,
+        message: "Variant not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Variant updated successfully",
+      variant
     });
+  } catch (error) {
+    return handleVariantError(error, res, "update");
   }
-
-  if (vendorProfile.status !== "active") {
-    return res.status(403).json({
-      success: false,
-      message: "Your vendor account is not active"
-    });
-  }
-
-  if (
-    !product.vendor ||
-    product.vendor.toString() !==
-      vendorProfile._id.toString()
-  ) {
-    return res.status(403).json({
-      success: false,
-      message:
-        "You do not have permission to update this variant"
-    });
-  }
-}
-
-const allowedFields = [
-  "name",
-  "sku",
-  "attributes",
-  "price",
-  "compareAtPrice",
-  "stock",
-  "lowStockThreshold",
-  "image",
-  "isActive"
-];
-
-const updates = {};
-
-for (const field of allowedFields) {
-  if (req.body[field] !== undefined) {
-    updates[field] = req.body[field];
-  }
-}
-
-if (updates.name !== undefined) {
-  updates.name = updates.name.trim();
-}
-
-if (updates.sku !== undefined) {
-  updates.sku = updates.sku.toUpperCase().trim();
-
-  const duplicateVariant = await Variant.findOne({
-    _id: { $ne: req.params.id },
-    sku: updates.sku
-  });
-
-  if (duplicateVariant) {
-    return res.status(409).json({
-      success: false,
-      message: "Another variant already uses this SKU"
-    });
-  }
-}
-
-if (updates.image !== undefined) {
-  updates.image = updates.image.trim();
-}
-
-const variant = await Variant.findByIdAndUpdate(
-  req.params.id,
-  updates,
-  {
-    new: true,
-    runValidators: true
-  }
-)
-  .populate("product", "name slug sku")
-  .lean();
-
-res.status(200).json({
-  success: true,
-  message: "Variant updated successfully",
-  variant
-});
-
-} catch (error) {
-console.error("Update variant error:", error);
-
-res.status(500).json({
-  success: false,
-  message: "Unable to update variant"
-});
-
-}
 };
 
 // DELETE VARIANT
 const deleteVariant = async (req, res) => {
-try {
-const existingVariant = await Variant.findById(
-req.params.id
-);
+  try {
+    const existingVariant = await Variant.findById(req.params.id);
 
-if (!existingVariant) {
-  return res.status(404).json({
-    success: false,
-    message: "Variant not found"
-  });
-}
+    if (!existingVariant) {
+      return res.status(404).json({
+        success: false,
+        message: "Variant not found"
+      });
+    }
 
-const product = await Product.findById(
-  existingVariant.product
-);
+    const product = await Product.findById(existingVariant.product);
 
-if (!product) {
-  return res.status(404).json({
-    success: false,
-    message: "Product not found"
-  });
-}
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
 
-if (req.user.role === "vendor") {
-  const vendorProfile = await Vendor.findOne({
-    user: req.user._id
-  });
+    const permissionError = await checkProductPermission(req, product);
 
-  if (!vendorProfile) {
-    return res.status(404).json({
-      success: false,
-      message: "Vendor profile not found"
+    if (permissionError) {
+      return res.status(permissionError.status).json({
+        success: false,
+        message: permissionError.message
+      });
+    }
+
+    if (!existingVariant.isActive) {
+      return res.status(400).json({
+        success: false,
+        message: "Variant is already inactive"
+      });
+    }
+
+    existingVariant.isActive = false;
+    await existingVariant.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Variant removed successfully"
     });
+  } catch (error) {
+    return handleVariantError(error, res, "remove");
   }
-
-  if (vendorProfile.status !== "active") {
-    return res.status(403).json({
-      success: false,
-      message: "Your vendor account is not active"
-    });
-  }
-
-  if (
-    !product.vendor ||
-    product.vendor.toString() !==
-      vendorProfile._id.toString()
-  ) {
-    return res.status(403).json({
-      success: false,
-      message:
-        "You do not have permission to remove this variant"
-    });
-  }
-}
-
-existingVariant.isActive = false;
-
-await existingVariant.save();
-
-res.status(200).json({
-  success: true,
-  message: "Variant removed successfully"
-});
-
-} catch (error) {
-console.error("Delete variant error:", error);
-
-res.status(500).json({
-  success: false,
-  message: "Unable to remove variant"
-});
-
-}
 };
 
 // RESTORE VARIANT
 const restoreVariant = async (req, res) => {
-try {
-const existingVariant = await Variant.findById(
-req.params.id
-);
+  try {
+    const existingVariant = await Variant.findById(req.params.id);
 
-if (!existingVariant) {
-  return res.status(404).json({
-    success: false,
-    message: "Variant not found"
-  });
-}
+    if (!existingVariant) {
+      return res.status(404).json({
+        success: false,
+        message: "Variant not found"
+      });
+    }
 
-const product = await Product.findById(
-  existingVariant.product
-);
+    const product = await Product.findById(existingVariant.product);
 
-if (!product) {
-  return res.status(404).json({
-    success: false,
-    message: "Product not found"
-  });
-}
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
 
-if (!product.isActive) {
-  return res.status(400).json({
-    success: false,
-    message: "Cannot restore a variant for an inactive product"
-  });
-}
+    if (!product.isActive) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot restore a variant for an inactive product"
+      });
+    }
 
-if (req.user.role === "vendor") {
-  const vendorProfile = await Vendor.findOne({
-    user: req.user._id
-  });
+    const permissionError = await checkProductPermission(req, product);
 
-  if (!vendorProfile) {
-    return res.status(404).json({
-      success: false,
-      message: "Vendor profile not found"
+    if (permissionError) {
+      return res.status(permissionError.status).json({
+        success: false,
+        message: permissionError.message
+      });
+    }
+
+    if (existingVariant.isActive) {
+      return res.status(400).json({
+        success: false,
+        message: "Variant is already active"
+      });
+    }
+
+    existingVariant.isActive = true;
+    await existingVariant.save();
+
+    const restoredVariant = await Variant.findById(existingVariant._id)
+      .populate("product", "name slug sku")
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      message: "Variant restored successfully",
+      variant: restoredVariant
     });
+  } catch (error) {
+    return handleVariantError(error, res, "restore");
   }
-
-  if (vendorProfile.status !== "active") {
-    return res.status(403).json({
-      success: false,
-      message: "Your vendor account is not active"
-    });
-  }
-
-  if (
-    !product.vendor ||
-    product.vendor.toString() !==
-      vendorProfile._id.toString()
-  ) {
-    return res.status(403).json({
-      success: false,
-      message:
-        "You do not have permission to restore this variant"
-    });
-  }
-}
-
-if (existingVariant.isActive) {
-  return res.status(400).json({
-    success: false,
-    message: "Variant is already active"
-  });
-}
-
-existingVariant.isActive = true;
-
-await existingVariant.save();
-
-const restoredVariant = await Variant.findById(
-  existingVariant._id
-)
-  .populate("product", "name slug sku")
-  .lean();
-
-res.status(200).json({
-  success: true,
-  message: "Variant restored successfully",
-  variant: restoredVariant
-});
-
-} catch (error) {
-console.error("Restore variant error:", error);
-
-res.status(500).json({
-  success: false,
-  message: "Unable to restore variant"
-});
-
-}
 };
 
 module.exports = {
-createVariant,
-getProductVariants,
-getVariantById,
-updateVariant,
-deleteVariant,
-restoreVariant
+  createVariant,
+  getProductVariants,
+  getVariantById,
+  updateVariant,
+  deleteVariant,
+  restoreVariant
 };
