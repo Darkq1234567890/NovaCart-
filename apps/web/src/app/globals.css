@@ -18,6 +18,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 130px;
 }
 
 body {
@@ -57,7 +58,7 @@ button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible {
-  outline: 3px solid #08c9b5;
+  outline: 3px solid var(--accent);
   outline-offset: 3px;
 }
 
@@ -138,11 +139,11 @@ select:focus-visible {
   gap: 10px;
   min-width: 100px;
   max-width: 580px;
-  padding: 0 15px;
   height: 46px;
-  background: #f4f3fb;
+  padding: 0 15px;
   border: 1px solid transparent;
   border-radius: 12px;
+  background: #f4f3fb;
 }
 
 .search-box:focus-within {
@@ -319,7 +320,7 @@ select:focus-visible {
 
 .button-primary {
   background: var(--primary);
-  color: white;
+  color: #fff;
   box-shadow: 0 7px 18px #5427d932;
 }
 
@@ -386,7 +387,7 @@ select:focus-visible {
   right: -22px;
   bottom: 24px;
   padding: 11px 15px;
-  border: 1px solid #ffffff;
+  border: 1px solid #fff;
   border-radius: 13px;
   background: #fff;
   box-shadow: 0 10px 25px #27134d15;
@@ -402,7 +403,7 @@ select:focus-visible {
   place-items: center;
   width: 51px;
   height: 51px;
-  border: 1px solid #ffffff;
+  border: 1px solid #fff;
   border-radius: 16px;
   background: #ffffffc9;
   box-shadow: 0 12px 24px #27134d12;
@@ -1265,7 +1266,5 @@ select:focus-visible {
     align-items: flex-start;
     flex-direction: column;
   }
-}
 
-@media (max-width: 360px) {
-  .container
+  .toast-notic
