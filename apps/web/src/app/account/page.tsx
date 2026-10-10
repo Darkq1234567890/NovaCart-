@@ -528,7 +528,7 @@ export default function AccountPage() {
                     )}
                   </form>
                 </section>
-                             <section className="content-card" id="security">
+                <section className="content-card" id="security">
                   <div className="card-heading">
                     <div>
                       <h2>Login & security</h2>
@@ -695,7 +695,6 @@ export default function AccountPage() {
           <span>Shopping made simple.</span>
         </footer>
       </div>
-
       <style jsx global>{`
         * {
           box-sizing: border-box;
@@ -1055,7 +1054,6 @@ export default function AccountPage() {
           font-weight: 750;
           text-decoration: none;
         }
-
         .account-content {
           display: flex;
           min-width: 0;
@@ -1299,4 +1297,287 @@ export default function AccountPage() {
           align-items: center;
           gap: 6px;
           padding: 6px 9px;
-                        
+          border-radius: 20px;
+          background: #f0f2f6;
+          color: #68758a;
+          font-size: 10px;
+          font-weight: 750;
+          text-transform: capitalize;
+        }
+
+        .status-indicator span {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #24a264;
+        }
+
+        .verification-tag.verified {
+          background: #eaf8ef;
+          color: #21804b;
+        }
+
+        .loading-panel,
+        .empty-panel {
+          display: flex;
+          align-items: center;
+          flex-direction: column;
+          justify-content: center;
+          min-height: 300px;
+          padding: 35px 20px;
+          border: 1px solid #e8edf4;
+          border-radius: 13px;
+          background: #fff;
+          text-align: center;
+        }
+
+        .spinner {
+          width: 35px;
+          height: 35px;
+          margin-bottom: 18px;
+          border: 3px solid #e4edfb;
+          border-top-color: #1768d2;
+          border-radius: 50%;
+          animation: account-spin 0.8s linear infinite;
+        }
+
+        @keyframes account-spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        .loading-panel h2,
+        .empty-panel h2 {
+          margin: 0 0 8px;
+          font-size: 18px;
+        }
+
+        .loading-panel p,
+        .empty-panel p {
+          max-width: 440px;
+          margin: 0 0 20px;
+          color: #7d889a;
+          font-size: 13px;
+          line-height: 1.7;
+        }
+
+        .empty-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 58px;
+          height: 58px;
+          margin-bottom: 17px;
+          border-radius: 50%;
+          background: #edf4ff;
+          color: #1768d2;
+          font-size: 27px;
+        }
+
+        .text-link {
+          margin-top: 15px;
+          font-size: 12px;
+          font-weight: 700;
+        }
+
+        .account-footer {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          margin-top: 32px;
+          color: #98a1af;
+          font-size: 11px;
+        }
+
+        .account-footer a {
+          color: #69768b;
+          text-decoration: none;
+        }
+
+        .account-footer a:hover {
+          color: #1768d2;
+        }
+
+        @media (max-width: 850px) {
+          .account-layout {
+            grid-template-columns: 220px minmax(0, 1fr);
+            gap: 16px;
+          }
+
+          .content-card {
+            padding: 20px;
+          }
+
+          .account-sidebar {
+            padding: 14px 9px;
+          }
+
+          .sidebar-item {
+            gap: 8px;
+            padding: 11px 7px;
+          }
+        }
+
+        @media (max-width: 650px) {
+          .account-page {
+            padding: 18px 13px 30px;
+          }
+
+          .breadcrumbs {
+            margin-bottom: 21px;
+          }
+
+          .account-heading {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 21px;
+          }
+
+          .heading-description {
+            font-size: 13px;
+          }
+
+          .welcome-card {
+            flex-wrap: wrap;
+            gap: 13px;
+            padding: 18px;
+          }
+
+          .welcome-avatar {
+            width: 54px;
+            height: 54px;
+            font-size: 21px;
+          }
+
+          .welcome-copy {
+            flex: 1;
+          }
+
+          .welcome-copy h2 {
+            font-size: 17px;
+          }
+
+          .account-badge {
+            margin-left: 0;
+          }
+
+          .account-layout {
+            grid-template-columns: minmax(0, 1fr);
+          }
+
+          .account-sidebar {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 4px;
+            padding: 12px;
+          }
+
+          .sidebar-title {
+            grid-column: 1 / -1;
+            padding-bottom: 7px;
+          }
+
+          .sidebar-item {
+            align-items: flex-start;
+            padding: 11px 8px;
+          }
+
+          .sidebar-icon {
+            width: 27px;
+            height: 27px;
+          }
+
+          .sidebar-item small {
+            font-size: 9px;
+          }
+
+          .sidebar-arrow {
+            display: none;
+          }
+
+          .sidebar-help {
+            grid-column: 1 / -1;
+            margin-top: 8px;
+            padding-top: 13px;
+          }
+
+          .content-card {
+            padding: 18px 15px;
+          }
+
+          .card-heading {
+            gap: 10px;
+          }
+
+          .card-heading h2 {
+            font-size: 16px;
+          }
+
+          .form-grid,
+          .password-fields {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 18px;
+          }
+
+          .password-fields .field:first-child {
+            grid-column: auto;
+          }
+
+          .form-actions {
+            justify-content: stretch;
+          }
+
+          .form-actions button {
+            flex: 1;
+          }
+        }
+
+        @media (max-width: 380px) {
+          .account-page {
+            padding-right: 9px;
+            padding-left: 9px;
+          }
+
+          .welcome-card {
+            padding: 14px;
+          }
+
+          .account-sidebar {
+            grid-template-columns: minmax(0, 1fr);
+          }
+
+          .sidebar-title,
+          .sidebar-help {
+            grid-column: auto;
+          }
+
+          .account-badge {
+            font-size: 10px;
+          }
+
+          .card-heading {
+            flex-direction: column;
+          }
+
+          .overview-row {
+            align-items: flex-start;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          *,
+          *::before,
+          *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+          }
+        }
+      `}</style>
+    </main>
+  );
+}
