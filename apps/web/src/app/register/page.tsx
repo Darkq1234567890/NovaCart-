@@ -1,11 +1,10 @@
 
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   ArrowRight,
   CheckCircle2,
   Eye,
@@ -15,7 +14,6 @@ import {
   Phone,
   ShieldCheck,
   ShoppingBag,
-  Sparkles,
   UserRound,
 } from "lucide-react";
 
@@ -25,6 +23,7 @@ const API_BASE_URL =
 
 export default function RegisterPage() {
   const router = useRouter();
+  const submitting = useRef(false);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -39,10 +38,17 @@ export default function RegisterPage() {
 
   async function handleRegister(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (submitting.current) return;
+
     setError("");
     setSuccess("");
 
-    if (!name.trim() || !email.trim() || !password) {
+    const cleanName = name.trim();
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPhone = phone.trim();
+
+    if (!cleanName || !cleanEmail || !password) {
       setError("Please complete all required fields.");
       return;
     }
@@ -57,22 +63,22 @@ export default function RegisterPage() {
       return;
     }
 
+    submitting.current = true;
     setLoading(true);
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/auth/register`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: name.trim(),
-            email: email.trim().toLowerCase(),
-            phone: phone.trim(),
-            password,
-          }),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: cleanName,
+          email: cleanEmail,
+          phone: cleanPhone,
+          password,
+        }),
+      });
 
       const result = await response.json().catch(() => ({}));
 
@@ -80,13 +86,12 @@ export default function RegisterPage() {
         throw new Error(
           result.message ||
             result.error ||
-            "Registration failed. Please try again."
+            `Registration failed (${response.status}). Please try again.`
         );
       }
 
-      setSuccess("Account created successfully! Redirecting to sign in...");
-
-      window.setTimeout(() => router.push("/login"), 1200);
+      setSuccess("Your account has been created. Redirecting to sign in...");
+      router.replace("/login");
     } catch (err) {
       setError(
         err instanceof Error
@@ -94,635 +99,516 @@ export default function RegisterPage() {
           : "Unable to create your account. Please try again."
       );
     } finally {
+      submitting.current = false;
       setLoading(false);
     }
   }
 
   return (
-    <main className="register-shell">
-      <header className="topbar">
-        <Link href="/" className="logo">
-          <span className="logo-mark">
-            <ShoppingBag size={24} strokeWidth={2.5} />
+    <main className="nc-register">
+      <header className="nc-header">
+        <Link href="/" className="nc-brand" aria-label="NovaCart home">
+          <span className="nc-brand-icon">
+            <ShoppingBag size={23} strokeWidth={2.5} />
           </span>
-          <span className="logo-text">
+          <span className="nc-brand-name">
             Nova<span>Cart</span>
           </span>
         </Link>
 
-        <Link href="/login" className="top-login">
-          Already a member? <strong>Sign in</strong>
-        </Link>
+        <div className="nc-header-account">
+          <span>Already shopping with us?</span>
+          <Link href="/login">Sign in</Link>
+        </div>
       </header>
 
-      <div className="register-layout">
-        <section className="welcome-panel">
-          <div className="welcome-content">
-            <span className="eyebrow">
-              <Sparkles size={15} /> YOUR NEXT FAVORITE THING
+      <div className="nc-main">
+        <section className="nc-showcase">
+          <div className="nc-showcase-content">
+            <span className="nc-eyebrow">
+              YOUR SHOPPING JOURNEY STARTS HERE
             </span>
 
             <h1>
-              Shopping better
+              Discover more.
               <br />
-              starts <span>here.</span>
+              Shop <span>smarter.</span>
             </h1>
 
-            <p className="welcome-copy">
-              Create your NovaCart account for a smoother,
-              smarter shopping experience.
+            <p className="nc-showcase-description">
+              One account for your shopping essentials. Discover products,
+              manage your orders, and make every shopping experience simpler.
             </p>
 
-            <div className="benefit-list">
-              <div className="benefit">
-                <span className="benefit-icon">
+            <div className="nc-benefits">
+              <div className="nc-benefit">
+                <span className="nc-benefit-icon">
                   <ShoppingBag size={20} />
                 </span>
                 <div>
-                  <strong>Everything you love</strong>
-                  <p>Discover fashion, accessories and more.</p>
+                  <strong>Discover your favorites</strong>
+                  <p>Explore fashion, accessories and more.</p>
                 </div>
               </div>
 
-              <div className="benefit">
-                <span className="benefit-icon">
-                  <ShieldCheck size={20} />
-                </span>
-                <div>
-                  <strong>Your account, your way</strong>
-                  <p>Manage your profile and orders in one place.</p>
-                </div>
-              </div>
-
-              <div className="benefit">
-                <span className="benefit-icon">
+              <div className="nc-benefit">
+                <span className="nc-benefit-icon">
                   <CheckCircle2 size={20} />
                 </span>
                 <div>
-                  <strong>Easy shopping experience</strong>
-                  <p>Keep your shopping details together.</p>
+                  <strong>Everything in one place</strong>
+                  <p>Access your profile and order details.</p>
+                </div>
+              </div>
+
+              <div className="nc-benefit">
+                <span className="nc-benefit-icon">
+                  <ShieldCheck size={20} />
+                </span>
+                <div>
+                  <strong>Your account, your control</strong>
+                  <p>Manage your account details whenever you need.</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="panel-footer">
-            <span className="footer-dot" />
-            A smarter way to shop with NovaCart
+          <div className="nc-showcase-footer">
+            <span className="nc-status-dot" />
+            Welcome to a better way to shop.
           </div>
-          <div className="decor decor-one" />
-          <div className="decor decor-two" />
+
+          <div className="nc-decoration nc-decoration-one" />
+          <div className="nc-decoration nc-decoration-two" />
         </section>
-
-        <section className="form-panel">
-          <div className="form-heading">
-            <Link href="/" className="mobile-back">
-              <ArrowLeft size={17} /> Home
-            </Link>
-
-            <span className="form-kicker">GET STARTED FOR FREE</span>
+        
+        <section className="nc-form-panel">
+          <div className="nc-form-heading">
+            <span className="nc-form-eyebrow">JOIN NOVACART</span>
             <h2>Create your account</h2>
-            <p>Enter your details to join NovaCart.</p>
+            <p>Fill in your details to get started.</p>
           </div>
 
           {error && (
-            <div className="notice notice-error" role="alert">
+            <div className="nc-message nc-error" role="alert">
               {error}
             </div>
           )}
 
           {success && (
-            <div className="notice notice-success" role="status">
+            <div className="nc-message nc-success" role="status">
               {success}
             </div>
           )}
 
-          <form onSubmit={handleRegister}>
-            <div className="field">
-              <label htmlFor="name">Full name</label>
-              <div className="input-wrap">
-                <UserRound size={19} />
-                <input
-                  id="name"
-                  autoComplete="name"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Enter your full name"
-                  required
-                />
-              </div>
+          <form onSubmit={handleRegister} aria-busy={loading}>
+
+            <label className="field-label" htmlFor="name">Full name</label>
+            <div className="input-wrap">
+              <UserRound size={19} />
+              <input
+                id="name"
+                type="text"
+                autoComplete="name"
+                placeholder="Enter your full name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                disabled={loading}
+              />
             </div>
 
-            <div className="field">
-              <label htmlFor="email">Email address</label>
-              <div className="input-wrap">
-                <Mail size={19} />
-                <input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="you@example.com"
-                  required
-                />
-              </div>
+            <label className="field-label" htmlFor="email">Email address</label>
+            <div className="input-wrap">
+              <Mail size={19} />
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={loading}
+              />
             </div>
 
-            <div className="field">
-              <label htmlFor="phone">
-                Phone number <span className="optional">(optional)</span>
-              </label>
-              <div className="input-wrap">
-                <Phone size={19} />
-                <input
-                  id="phone"
-                  type="tel"
-                  autoComplete="tel"
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                  placeholder="Enter your phone number"
-                />
-              </div>
+            <label className="field-label" htmlFor="phone">Phone number</label>
+            <div className="input-wrap">
+              <Phone size={19} />
+              <input
+                id="phone"
+                type="tel"
+                autoComplete="tel"
+                placeholder="Enter your phone number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                disabled={loading}
+              />
             </div>
 
-            <div className="field">
-              <label htmlFor="password">Password</label>
-              <div className="input-wrap">
-                <LockKeyhole size={19} />
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="At least 6 characters"
-                  minLength={6}
-                  required
-                />
-                <button
-                  type="button"
-                  className="visibility-button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
-                </button>
-              </div>
+            <label className="field-label" htmlFor="password">Password</label>
+            <div className="input-wrap">
+              <LockKeyhole size={19} />
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                placeholder="Create a password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                minLength={6}
+                required
+                disabled={loading}
+              />
+              <button
+                className="password-toggle"
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                disabled={loading}
+              >
+                {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
+              </button>
             </div>
 
-            <div className="field">
-              <label htmlFor="confirmPassword">Confirm password</label>
-              <div className="input-wrap">
-                <LockKeyhole size={19} />
-                <input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  autoComplete="new-password"
-                  value={confirmPassword}
-                  onChange={(event) =>
-                    setConfirmPassword(event.target.value)
-                  }
-                  placeholder="Enter password again"
-                  required
-                />
-                <button
-                  type="button"
-                  className="visibility-button"
-                  onClick={() =>
-                    setShowConfirmPassword(!showConfirmPassword)
-                  }
-                  aria-label={
-                    showConfirmPassword ? "Hide password" : "Show password"
-                  }
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff size={19} />
-                  ) : (
-                    <Eye size={19} />
-                  )}
-                </button>
-              </div>
+            <label className="field-label" htmlFor="confirmPassword">
+              Confirm password
+            </label>
+            <div className="input-wrap">
+              <ShieldCheck size={19} />
+              <input
+                id="confirmPassword"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                placeholder="Enter your password again"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                minLength={6}
+                required
+                disabled={loading}
+              />
             </div>
 
-            <p className="terms">
-              By creating an account, you agree to our{" "}
-              <Link href="/terms">Terms</Link> and{" "}
-              <Link href="/privacy">Privacy Policy</Link>.
+            <p className="terms-text">
+              By creating an account, you agree to NovaCart's terms and
+              acknowledge our privacy policy.
             </p>
 
             <button
-              className="submit-button"
+              className="register-button"
               type="submit"
               disabled={loading}
             >
-              <span>{loading ? "Creating your account..." : "Create account"}</span>
-              {!loading && <ArrowRight size={19} />}
+              {loading ? (
+                <>
+                  <span className="spinner" />
+                  Creating account...
+                </>
+              ) : (
+                <>
+                  Create account
+                  <ArrowRight size={19} />
+                </>
+              )}
             </button>
           </form>
 
-          <div className="signin-bottom">
-            Already have an account?{" "}
-            <Link href="/login">Sign in instead</Link>
+          <div className="login-prompt">
+            Already have an account? <Link href="/login">Sign in</Link>
           </div>
 
           <div className="secure-note">
             <ShieldCheck size={16} />
-            Your information is sent securely over HTTPS.
+            Your information is protected by NovaCart.
           </div>
         </section>
       </div>
 
-      <footer className="page-footer">
-        <span>© {new Date().getFullYear()} NovaCart</span>
-        <span>Made for a better shopping experience.</span>
+      <footer className="register-footer">
+        © {new Date().getFullYear()} NovaCart. All rights reserved.
       </footer>
 
       <style jsx global>{`
+
+        :root {
+          color-scheme: light;
+        }
+
         * {
           box-sizing: border-box;
         }
 
         body {
           margin: 0;
+          background: #f1f3f6;
           font-family: Arial, Helvetica, sans-serif;
-          color: #172337;
-          background: #f5f7fb;
         }
 
-        a {
-          -webkit-tap-highlight-color: transparent;
-        }
-
-        .register-shell {
+        .register-page {
           min-height: 100vh;
-          padding: 0 5.5%;
-          background:
-            radial-gradient(ellipse at 8% 5%, #e5efff 0, transparent 32%),
-            #f5f7fb;
+          padding: 28px 20px 18px;
+          color: #212121;
+          background: #f1f3f6;
         }
 
-        .topbar {
-          max-width: 1240px;
-          min-height: 86px;
-          margin: 0 auto;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 18px;
+        .register-header {
+          width: 100%;
+          max-width: 1040px;
+          margin: 0 auto 22px;
         }
 
-        .logo {
+        .brand {
           display: inline-flex;
           align-items: center;
-          gap: 10px;
-          color: #172337;
-          text-decoration: none;
-        }
-
-        .logo-mark {
-          width: 43px;
-          height: 43px;
-          display: grid;
-          place-items: center;
-          border-radius: 13px;
-          background: #1769d2;
-          color: #fff;
-          box-shadow: 0 6px 16px #1769d233;
-        }
-
-        .logo-text {
-          font-size: 25px;
-          font-weight: 850;
+          gap: 8px;
+          color: #2874f0;
+          font-size: 27px;
+          font-weight: 800;
           letter-spacing: -1px;
-        }
-
-        .logo-text span {
-          color: #1769d2;
-        }
-
-        .top-login {
-          color: #68758a;
-          font-size: 13px;
           text-decoration: none;
         }
 
-        .top-login strong {
-          margin-left: 4px;
-          color: #1769d2;
+        .brand-mark {
+          display: grid;
+          width: 36px;
+          height: 36px;
+          place-items: center;
+          border-radius: 10px;
+          color: #fff;
+          background: #2874f0;
         }
 
         .register-layout {
-          width: 100%;
-          max-width: 1120px;
-          min-height: 680px;
-          margin: 18px auto 36px;
           display: grid;
-          grid-template-columns: 0.93fr 1.07fr;
+          grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+          width: 100%;
+          max-width: 1040px;
+          min-height: 610px;
+          margin: 0 auto;
           overflow: hidden;
-          border: 1px solid #e7ebf2;
-          border-radius: 25px;
+          border-radius: 12px;
           background: #fff;
-          box-shadow: 0 24px 75px #20395d12;
+          box-shadow: 0 8px 32px rgba(20, 40, 80, 0.08);
         }
 
-        .welcome-panel {
-          position: relative;
-          isolation: isolate;
+        .showcase-panel {
           display: flex;
           flex-direction: column;
           justify-content: space-between;
-          overflow: hidden;
-          padding: 55px 43px 30px;
-          background: linear-gradient(145deg, #1458bb, #1769d2 55%, #3688ee);
+          padding: 44px 38px;
           color: #fff;
+          background: linear-gradient(145deg, #2874f0 0%, #1254b8 100%);
         }
 
-        .welcome-content,
-        .panel-footer {
-          position: relative;
-          z-index: 2;
+        .showcase-panel h1 {
+          margin: 0 0 16px;
+          font-size: clamp(30px, 3vw, 42px);
+          line-height: 1.15;
+          letter-spacing: -1.2px;
         }
 
-        .eyebrow {
-          display: inline-flex;
-          align-items: center;
-          gap: 7px;
-          padding: 9px 12px;
-          border: 1px solid #ffffff45;
-          border-radius: 30px;
-          background: #ffffff14;
-          font-size: 10px;
-          font-weight: 800;
-          letter-spacing: 1px;
-        }
-
-        .welcome-panel h1 {
-          margin: 30px 0 17px;
-          font-size: clamp(36px, 4vw, 51px);
-          line-height: 1.1;
-          letter-spacing: -2px;
-        }
-
-        .welcome-panel h1 span {
-          color: #ffdc87;
-        }
-
-        .welcome-copy {
-          max-width: 330px;
+        .showcase-panel > div > p {
           margin: 0;
-          color: #e3efff;
+          color: rgba(255, 255, 255, 0.85);
           font-size: 15px;
           line-height: 1.8;
         }
 
-        .benefit-list {
+        .benefits {
           display: grid;
-          gap: 24px;
-          margin-top: 40px;
+          gap: 23px;
+          margin-top: 38px;
         }
 
         .benefit {
           display: flex;
-          align-items: center;
-          gap: 14px;
+          align-items: flex-start;
+          gap: 13px;
         }
 
         .benefit-icon {
-          flex: 0 0 44px;
-          width: 44px;
-          height: 44px;
           display: grid;
+          flex: 0 0 42px;
+          width: 42px;
+          height: 42px;
           place-items: center;
-          border: 1px solid #ffffff40;
-          border-radius: 13px;
-          background: #ffffff19;
+          border: 1px solid rgba(255, 255, 255, 0.24);
+          border-radius: 11px;
+          background: rgba(255, 255, 255, 0.12);
         }
 
-        .benefit strong {
-          font-size: 13px;
+        .benefit h3 {
+          margin: 1px 0 5px;
+          font-size: 15px;
         }
 
         .benefit p {
-          margin: 5px 0 0;
-          color: #dbeaff;
-          font-size: 11px;
+          margin: 0;
+          color: rgba(255, 255, 255, 0.8);
+          font-size: 13px;
           line-height: 1.6;
         }
 
-        .panel-footer {
-          display: flex;
-          align-items: center;
-          gap: 9px;
-          margin-top: 40px;
-          color: #e4efff;
-          font-size: 11px;
-        }
-
-        .footer-dot {
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-          background: #ffdc87;
-        }
-
-        .decor {
-          position: absolute;
-          z-index: 1;
-          border: 1px solid #ffffff19;
-          border-radius: 50%;
-          pointer-events: none;
-        }
-
-        .decor-one {
-          width: 350px;
-          height: 350px;
-          right: -180px;
-          top: -100px;
-          box-shadow: 0 0 0 35px #ffffff08, 0 0 0 70px #ffffff06;
-        }
-
-        .decor-two {
-          width: 240px;
-          height: 240px;
-          bottom: -150px;
-          left: -95px;
-          box-shadow: 0 0 0 35px #ffffff08;
+        .showcase-bottom {
+          margin-top: 38px;
+          color: rgba(255, 255, 255, 0.8);
+          font-size: 12px;
         }
 
         .form-panel {
-          padding: 43px clamp(25px, 4vw, 55px);
-          align-self: center;
+          padding: 38px 42px 30px;
         }
 
         .form-heading {
-          margin-bottom: 27px;
-        }
-
-        .mobile-back {
-          display: none;
-        }
-
-        .form-kicker {
-          color: #1769d2;
-          font-size: 10px;
-          font-weight: 800;
-          letter-spacing: 1.7px;
+          margin-bottom: 26px;
         }
 
         .form-heading h2 {
-          margin: 11px 0 9px;
+          margin: 0 0 9px;
           color: #172337;
-          font-size: 30px;
-          letter-spacing: -1px;
+          font-size: 29px;
+          letter-spacing: -0.8px;
         }
 
         .form-heading p {
           margin: 0;
-          color: #788498;
-          font-size: 13px;
+          color: #6b7280;
+          font-size: 14px;
           line-height: 1.6;
         }
 
-        .field {
-          margin-bottom: 16px;
-        }
-
-        .field label {
+        .field-label {
           display: block;
-          margin-bottom: 8px;
-          color: #344258;
-          font-size: 12px;
-          font-weight: 750;
-        }
-
-        .optional {
-          color: #929daf;
-          font-size: 11px;
-          font-weight: 400;
+          margin: 17px 0 8px;
+          color: #374151;
+          font-size: 13px;
+          font-weight: 700;
         }
 
         .input-wrap {
-          min-height: 49px;
           display: flex;
           align-items: center;
           gap: 11px;
+          min-height: 48px;
           padding: 0 13px;
-          border: 1px solid #e0e5ed;
-          border-radius: 10px;
-          background: #fbfcfe;
-          color: #8995a8;
-          transition: border-color .18s, box-shadow .18s, background .18s;
+          border: 1px solid #d9dee7;
+          border-radius: 7px;
+          color: #7b8494;
+          background: #fff;
+          transition: border-color 0.2s, box-shadow 0.2s;
         }
 
         .input-wrap:focus-within {
-          border-color: #1769d2;
-          background: #fff;
-          box-shadow: 0 0 0 3px #1769d21a;
+          border-color: #2874f0;
+          box-shadow: 0 0 0 3px rgba(40, 116, 240, 0.1);
         }
 
         .input-wrap input {
           width: 100%;
           min-width: 0;
-          height: 47px;
+          height: 46px;
           padding: 0;
           border: 0;
           outline: 0;
+          color: #1f2937;
           background: transparent;
-          color: #172337;
           font: inherit;
-          font-size: 13px;
+          font-size: 14px;
         }
 
         .input-wrap input::placeholder {
-          color: #a1aaba;
+          color: #a0a7b4;
         }
 
-        .visibility-button {
+        .input-wrap input:disabled {
+          cursor: not-allowed;
+        }
+
+        .password-toggle {
+          display: grid;
           flex: 0 0 28px;
           width: 28px;
-          height: 35px;
-          display: grid;
+          height: 32px;
           place-items: center;
           padding: 0;
           border: 0;
+          color: #6b7280;
           background: transparent;
-          color: #8793a5;
           cursor: pointer;
         }
 
-        .terms {
-          margin: 3px 0 17px;
-          color: #818da0;
-          font-size: 10px;
-          line-height: 1.8;
+        .password-toggle:disabled {
+          cursor: not-allowed;
+          opacity: 0.5;
         }
 
-        .terms a {
-          color: #1769d2;
-          font-weight: 700;
-          text-decoration: none;
+        .terms-text {
+          margin: 18px 0;
+          color: #7b8494;
+          font-size: 12px;
+          line-height: 1.7;
         }
 
-        .submit-button {
-          width: 100%;
-          min-height: 50px;
+        .register-button {
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 10px;
+          width: 100%;
+          min-height: 49px;
+          padding: 12px 18px;
           border: 0;
-          border-radius: 10px;
-          background: #1769d2;
+          border-radius: 7px;
           color: #fff;
-          font-size: 13px;
-          font-weight: 750;
+          background: #fb641b;
+          font-size: 15px;
+          font-weight: 700;
           cursor: pointer;
-          box-shadow: 0 7px 17px #1769d22b;
-          transition: background .18s, transform .18s;
+          transition: background 0.2s, transform 0.2s;
         }
 
-        .submit-button:hover:not(:disabled) {
+        .register-button:hover:not(:disabled) {
+          background: #e95712;
           transform: translateY(-1px);
-          background: #1058b9;
         }
 
-        .submit-button:disabled {
-          opacity: .65;
+        .register-button:disabled {
           cursor: wait;
+          opacity: 0.75;
         }
 
-        .notice {
-          margin-bottom: 17px;
-          padding: 12px 14px;
-          border-radius: 9px;
-          font-size: 12px;
-          line-height: 1.6;
+        .spinner {
+          display: inline-block;
+          width: 17px;
+          height: 17px;
+          border: 2px solid rgba(255, 255, 255, 0.45);
+          border-top-color: #fff;
+          border-radius: 50%;
+          animation: register-spin 0.7s linear infinite;
         }
 
-        .notice-error {
-          border: 1px solid #ffd5d5;
-          background: #fff4f3;
-          color: #b42318;
+        @keyframes register-spin {
+          to {
+            transform: rotate(360deg);
+          }
         }
 
-        .notice-success {
-          border: 1px solid #b8ebce;
-          background: #effcf4;
-          color: #087443;
-        }
-
-        .signin-bottom {
+        .login-prompt {
           margin-top: 23px;
+          color: #6b7280;
+          font-size: 13px;
           text-align: center;
-          color: #7d899b;
-          font-size: 12px;
         }
 
-        .signin-bottom a {
-          color: #1769d2;
-          font-weight: 750;
+        .login-prompt a {
+          color: #2874f0;
+          font-weight: 700;
           text-decoration: none;
+        }
+
+        .login-prompt a:hover {
+          text-decoration: underline;
         }
 
         .secure-note {
@@ -730,141 +616,84 @@ export default function RegisterPage() {
           align-items: center;
           justify-content: center;
           gap: 7px;
-          margin-top: 26px;
-          padding-top: 17px;
-          border-top: 1px solid #edf0f5;
-          color: #8b96a7;
-          font-size: 10px;
+          margin-top: 22px;
+          color: #8a93a2;
+          font-size: 12px;
         }
 
-        .secure-note svg {
-          color: #21865a;
+        .register-footer {
+          max-width: 1040px;
+          margin: 22px auto 0;
+          color: #8a93a2;
+          font-size: 12px;
+          text-align: center;
         }
 
-        .page-footer {
-          max-width: 1120px;
-          display: flex;
-          justify-content: space-between;
-          gap: 16px;
-          margin: 0 auto;
-          padding: 0 0 24px;
-          color: #8a95a6;
-          font-size: 10px;
-        }
+        @media (max-width: 760px) {
+          .register-page {
+            padding: 18px 14px;
+          }
 
-        
-        @media (max-width: 850px) {
-          .register-shell {
-            padding: 0 20px;
+          .register-header {
+            margin-bottom: 16px;
           }
 
           .register-layout {
-            max-width: 600px;
             grid-template-columns: 1fr;
-            margin-top: 10px;
+            max-width: 520px;
+            min-height: auto;
           }
 
-          .welcome-panel {
-            padding: 32px 30px;
+          .showcase-panel {
+            padding: 25px 24px;
           }
 
-          .welcome-panel h1 {
-            margin-top: 22px;
-            font-size: 39px;
+          .showcase-panel h1 {
+            font-size: 29px;
           }
 
-          .benefit-list {
+          .benefits {
+            grid-template-columns: 1fr;
             gap: 16px;
-            margin-top: 25px;
+            margin-top: 24px;
           }
 
-          .panel-footer {
-            margin-top: 25px;
-          }
-
-          .form-panel {
-            padding: 35px 30px;
-          }
-
-          .page-footer {
-            max-width: 600px;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .register-shell {
-            padding: 0 13px;
-          }
-
-          .topbar {
-            min-height: 72px;
-          }
-
-          .logo-mark {
-            width: 37px;
-            height: 37px;
-          }
-
-          .logo-text {
-            font-size: 22px;
-          }
-
-          .top-login {
-            font-size: 11px;
-          }
-
-          .register-layout {
-            margin: 5px auto 23px;
-            border-radius: 17px;
-          }
-
-          .welcome-panel {
-            padding: 25px 22px;
-          }
-
-          .welcome-panel h1 {
-            font-size: 35px;
-            letter-spacing: -1.4px;
-          }
-
-          .welcome-copy {
-            font-size: 13px;
-          }
-
-          .benefit-list {
-            gap: 15px;
-            margin-top: 23px;
-          }
-
-          .benefit-icon {
-            flex-basis: 39px;
-            width: 39px;
-            height: 39px;
+          .showcase-bottom {
+            margin-top: 24px;
           }
 
           .form-panel {
-            padding: 29px 21px;
+            padding: 28px 24px;
+          }
+
+          .form-heading {
+            margin-bottom: 20px;
           }
 
           .form-heading h2 {
             font-size: 26px;
           }
+        }
 
-          .mobile-back {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            margin-bottom: 22px;
-            color: #64748b;
-            font-size: 12px;
-            text-decoration: none;
+        @media (max-width: 380px) {
+          .register-page {
+            padding: 14px 10px;
           }
 
-          .page-footer {
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            padding-bottom: 20px;
+          .showcase-panel {
+            padding: 22px 18px;
+          }
+
+          .form-panel {
+            padding: 24px 17px;
+          }
+
+          .brand {
+            font-size: 24px;
+          }
+
+          .showcase-panel h1 {
+            font-size: 26px;
           }
         }
       `}</style>
