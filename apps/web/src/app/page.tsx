@@ -1,182 +1,304 @@
+
 "use client";
+
+import { useEffect, useMemo, useState } from "react";
+
 const categories = [
-  { name: "Korean Fashion", icon: "👕", color: "#e8efff" },
-  { name: "Japanese Style", icon: "👘", color: "#fce7f3" },
-  { name: "Electronics", icon: "🎧", color: "#e0f2fe" },
-  { name: "Accessories", icon: "⌚", color: "#fef3c7" },
-  { name: "Streetwear", icon: "👟", color: "#dcfce7" },
-  { name: "New Arrivals", icon: "✨", color: "#f3e8ff" },
+  { name: "All", icon: "✦" },
+  { name: "Korean Fashion", icon: "👕" },
+  { name: "Japanese Style", icon: "👘" },
+  { name: "Electronics", icon: "🎧" },
+  { name: "Footwear", icon: "👟" },
+  { name: "Accessories", icon: "⌚" },
 ];
 
 const products = [
   {
     id: 1,
     name: "Korean Oversized T-Shirt",
-    category: "KOREAN FASHION",
+    category: "Korean Fashion",
     price: 1099,
     oldPrice: 1499,
-    discount: "27% OFF",
-    rating: "4.6",
+    discount: 27,
+    rating: 4.6,
     icon: "👕",
-    color: "#e8efff",
-    tag: "BESTSELLER",
+    color: "#e6edff",
+    label: "BESTSELLER",
   },
   {
     id: 2,
     name: "Minimal Wireless Headphones",
-    category: "ELECTRONICS",
+    category: "Electronics",
     price: 1899,
     oldPrice: 2499,
-    discount: "24% OFF",
-    rating: "4.5",
+    discount: 24,
+    rating: 4.5,
     icon: "🎧",
     color: "#e0f2fe",
-    tag: "POPULAR",
+    label: "HOT DEAL",
   },
   {
     id: 3,
     name: "Japanese Everyday Backpack",
-    category: "JAPANESE STYLE",
+    category: "Japanese Style",
     price: 1499,
     oldPrice: 1999,
-    discount: "25% OFF",
-    rating: "4.7",
+    discount: 25,
+    rating: 4.7,
     icon: "🎒",
     color: "#fce7f3",
-    tag: "TRENDING",
+    label: "TRENDING",
   },
   {
     id: 4,
-    name: "Classic Everyday Sneakers",
-    category: "STREETWEAR",
+    name: "Classic Street Sneakers",
+    category: "Footwear",
     price: 2299,
     oldPrice: 2999,
-    discount: "23% OFF",
-    rating: "4.4",
+    discount: 23,
+    rating: 4.4,
     icon: "👟",
     color: "#dcfce7",
-    tag: "NEW",
+    label: "NEW ARRIVAL",
+  },
+  {
+    id: 5,
+    name: "Everyday Minimal Watch",
+    category: "Accessories",
+    price: 1299,
+    oldPrice: 1799,
+    discount: 28,
+    rating: 4.3,
+    icon: "⌚",
+    color: "#fef3c7",
+    label: "LIMITED DEAL",
+  },
+  {
+    id: 6,
+    name: "Japanese Relaxed Hoodie",
+    category: "Japanese Style",
+    price: 1799,
+    oldPrice: 2299,
+    discount: 22,
+    rating: 4.8,
+    icon: "🧥",
+    color: "#ede9fe",
+    label: "TOP RATED",
+  },
+  {
+    id: 7,
+    name: "Korean Everyday Sneakers",
+    category: "Korean Fashion",
+    price: 1999,
+    oldPrice: 2699,
+    discount: 26,
+    rating: 4.5,
+    icon: "👟",
+    color: "#ffe4e6",
+    label: "POPULAR",
+  },
+  {
+    id: 8,
+    name: "Portable Music Earbuds",
+    category: "Electronics",
+    price: 999,
+    oldPrice: 1499,
+    discount: 33,
+    rating: 4.4,
+    icon: "🎵",
+    color: "#dbeafe",
+    label: "GREAT VALUE",
   },
 ];
 
+const money = (amount: number) =>
+  `₹${amount.toLocaleString("en-IN")}`;
+
 export default function HomePage() {
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [search, setSearch] = useState("");
+  const [cartCount, setCartCount] = useState(0);
+  const [timeLeft, setTimeLeft] = useState({
+    hours: 5,
+    minutes: 59,
+    seconds: 59,
+  });
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setTimeLeft((previous) => {
+        if (
+          previous.hours === 0 &&
+          previous.minutes === 0 &&
+          previous.seconds === 0
+        ) {
+          return { hours: 5, minutes: 59, seconds: 59 };
+        }
+
+        if (previous.seconds > 0) {
+          return { ...previous, seconds: previous.seconds - 1 };
+        }
+
+        if (previous.minutes > 0) {
+          return {
+            ...previous,
+            minutes: previous.minutes - 1,
+            seconds: 59,
+          };
+        }
+
+        return {
+          hours: previous.hours - 1,
+          minutes: 59,
+          seconds: 59,
+        };
+      });
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const matchesCategory =
+        activeCategory === "All" ||
+        product.category === activeCategory;
+
+      const searchText = search.trim().toLowerCase();
+      const matchesSearch =
+        !searchText ||
+        product.name.toLowerCase().includes(searchText) ||
+        product.category.toLowerCase().includes(searchText);
+
+      return matchesCategory && matchesSearch;
+    });
+  }, [activeCategory, search]);
+
   return (
     <main>
       <div className="top-strip">
-        Discover your style. Find your next favourite.
-        <span>Free shipping on selected orders</span>
+        <span>Discover your style. Find your next favourite.</span>
+        <span>New-season finds • Exciting everyday discoveries</span>
       </div>
 
       <header className="site-header">
         <a className="brand" href="/" aria-label="NovaCart home">
           <span className="brand-symbol">N</span>
-          <span>nova<span className="brand-accent">cart</span></span>
+          <span>
+            nova<span className="brand-accent">cart</span>
+          </span>
         </a>
 
-        <form className="search-box" action="/products" method="get">
+        <form
+          className="search-box"
+          onSubmit={(event) => {
+            event.preventDefault();
+            document
+              .getElementById("shop-products")
+              ?.scrollIntoView({ behavior: "smooth" });
+          }}
+        >
           <span className="search-icon">⌕</span>
           <input
             type="search"
-            name="search"
-            placeholder="Search fashion, electronics and more..."
+            placeholder="Search products, brands and styles..."
             aria-label="Search products"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
           />
           <button type="submit">Search</button>
         </form>
 
-        <nav className="header-actions" aria-label="Main navigation">
+        <nav className="header-actions" aria-label="Shopping navigation">
           <a href="/account">♙ <span>Account</span></a>
           <a href="/orders">▤ <span>Orders</span></a>
-          <a className="cart-link" href="/cart">
+          <a className="cart-link" href="#shop-products">
             ♧ <span>Cart</span>
-            <span className="cart-count">0</span>
+            <span className="cart-count">{cartCount}</span>
           </a>
         </nav>
       </header>
 
-      <nav className="category-nav" aria-label="Shop categories">
-        <a href="/products">All Products</a>
-        <a href="/products?category=fashion">Fashion</a>
-        <a href="/products?category=electronics">Electronics</a>
-        <a href="/products?category=accessories">Accessories</a>
-        <a href="/products?sort=newest">New Arrivals</a>
-        <a href="/products?sort=popular">Trending Now</a>
+      <nav className="category-nav" aria-label="Main categories">
+        <a href="#shop-products">Shop All</a>
+        <a href="#categories">Categories</a>
+        <a href="#deals">Today's Deals</a>
+        <a href="#shop-products">Trending</a>
+        <a href="/vendor">Sell on NovaCart</a>
       </nav>
 
       <div className="page-container">
         <section className="hero">
           <div className="hero-content">
-            <span className="eyebrow">
-              YOUR STYLE. YOUR DISCOVERY.
-            </span>
+            <span className="eyebrow">THE NEW WAY TO DISCOVER</span>
             <h1>
-              Find your next
+              Your style.
               <br />
-              <span>favourite thing.</span>
+              <span>Your discovery.</span>
             </h1>
             <p>
-              Explore Korean fashion, Japanese-inspired essentials,
-              and everyday accessories from a world of independent sellers.
+              From Korean streetwear to Japanese-inspired essentials,
+              discover products that make everyday shopping exciting.
             </p>
+
             <div className="hero-actions">
-              <a className="primary-button" href="/products">
-                Explore Collection <span>→</span>
+              <a className="primary-button" href="#shop-products">
+                Shop the collection <span>→</span>
               </a>
-              <a className="text-button" href="#categories">
-                Browse Categories
+              <a className="text-button" href="#deals">
+                Explore deals ↓
               </a>
             </div>
+
             <div className="hero-trust">
-              <span><b>✓</b> Curated discoveries</span>
-              <span><b>✓</b> Seller marketplace</span>
+              <span><b>✓</b> Multiple sellers</span>
+              <span><b>✓</b> Fresh discoveries</span>
             </div>
           </div>
 
-          <div className="hero-art" aria-label="Fashion and accessories illustration">
+          <div className="hero-art">
             <div className="art-orbit orbit-one" />
             <div className="art-orbit orbit-two" />
-            <div className="floating-card card-top">
-              <span>✦</span> New season
-            </div>
             <div className="hero-product hero-shirt">👕</div>
             <div className="hero-product hero-headphones">🎧</div>
             <div className="hero-product hero-shoe">👟</div>
+            <div className="floating-card card-top">
+              <span>✦</span> New season, new style
+            </div>
             <div className="floating-card card-bottom">
               <span className="online-dot" />
-              Discover something new
+              Your next favourite awaits
             </div>
           </div>
-          <div className="hero-decoration decoration-one" />
-          <div className="hero-decoration decoration-two" />
         </section>
 
-        <section className="benefit-row" aria-label="Shopping benefits">
+        <section className="benefit-row">
           <div className="benefit">
             <span className="benefit-icon">◇</span>
             <div>
-              <strong>Curated collections</strong>
-              <small>Discover your style</small>
+              <strong>Discover more</strong>
+              <small>Explore unique finds</small>
             </div>
           </div>
           <div className="benefit">
             <span className="benefit-icon">♧</span>
             <div>
               <strong>Multiple sellers</strong>
-              <small>More choice, one place</small>
+              <small>More choice in one place</small>
             </div>
           </div>
           <div className="benefit">
             <span className="benefit-icon">✓</span>
             <div>
               <strong>Secure shopping</strong>
-              <small>Designed with care</small>
+              <small>Shop with confidence</small>
             </div>
           </div>
           <div className="benefit">
             <span className="benefit-icon">↗</span>
             <div>
-              <strong>Fresh finds</strong>
-              <small>Explore new arrivals</small>
+              <strong>Fresh collections</strong>
+              <small>Find your next favourite</small>
             </div>
           </div>
         </section>
@@ -184,100 +306,181 @@ export default function HomePage() {
         <section className="section" id="categories">
           <div className="section-heading">
             <div>
-              <span className="section-kicker">EXPLORE THE MARKETPLACE</span>
-              <h2>Shop by category</h2>
-              <p>Find the things that match your world.</p>
+              <span className="section-kicker">YOUR WORLD, YOUR STYLE</span>
+              <h2>Explore categories</h2>
+              <p>Start with what you love.</p>
             </div>
-            <a className="view-all" href="/products">
-              View all categories <span>→</span>
-            </a>
           </div>
 
           <div className="category-grid">
-            {categories.map((category) => (
-              <a
-                className="category-card"
-                href={`/products?category=${encodeURIComponent(category.name)}`}
-                key={category.name}
-              >
-                <span
-                  className="category-art"
-                  style={{ backgroundColor: category.color }}
+            {categories.filter((category) => category.name !== "All").map(
+              (category) => (
+                <button
+                  className="category-card"
+                  key={category.name}
+                  type="button"
+                  onClick={() => {
+                    setActiveCategory(category.name);
+                    document
+                      .getElementById("shop-products")
+                      ?.scrollIntoView({ behavior: "smooth" });
+                  }}
                 >
-                  {category.icon}
-                </span>
-                <strong>{category.name}</strong>
-                <span className="category-arrow">↗</span>
-              </a>
-            ))}
+                  <span className="category-art">
+                    {category.icon}
+                  </span>
+                  <strong>{category.name}</strong>
+                  <span className="category-arrow">↗</span>
+                </button>
+              ),
+            )}
           </div>
         </section>
 
-        <section className="section featured-section">
-          <div className="section-heading">
-            <div>
-              <span className="section-kicker">HANDPICKED FOR YOU</span>
-              <h2>Featured finds</h2>
-              <p>Popular picks to get your discovery started.</p>
-            </div>
-            <a className="view-all" href="/products">
-              Explore all products <span>→</span>
+        <section className="deal-banner" id="deals">
+          <div className="deal-copy">
+            <span className="deal-kicker">THE DISCOVERY SALE</span>
+            <h2>
+              Good finds.
+              <br />
+              Even better prices.
+            </h2>
+            <p>
+              Explore special prices on selected fashion, accessories
+              and everyday essentials.
+            </p>
+            <a className="deal-button" href="#shop-products">
+              Shop the deals <span>→</span>
             </a>
           </div>
 
-          <div className="product-grid">
-            {products.map((product) => (
-              <article className="product-card" key={product.id}>
-                <a
-                  className="product-image"
-                  href={`/products/${product.id}`}
-                  style={{ backgroundColor: product.color }}
-                  aria-label={`View ${product.name}`}
-                >
-                  <span className="product-tag">{product.tag}</span>
-                  <span className="product-emoji">{product.icon}</span>
-                  <span className="quick-view">View product ↗</span>
-                </a>
-                <div className="product-info">
-                  <span className="product-category">{product.category}</span>
-                  <a href={`/products/${product.id}`}>
-                    <h3>{product.name}</h3>
-                  </a>
-                  <div className="product-rating">
-                    <span>★ {product.rating}</span>
-                    <span className="rating-caption">Customer favourite</span>
-                  </div>
-                  <div className="product-price-row">
-                    <strong>₹{product.price.toLocaleString("en-IN")}</strong>
-                    <del>₹{product.oldPrice.toLocaleString("en-IN")}</del>
-                    <span className="discount">{product.discount}</span>
-                  </div>
-                  <button
-                    className="add-cart-button"
-                    onClick={() => {
-                      window.location.href = "/cart";
-                    }}
-                    type="button"
-                  >
-                    View shopping cart <span>→</span>
-                  </button>
-                </div>
-              </article>
-            ))}
+          <div className="deal-highlight">
+            <span className="deal-sparkle">✳</span>
+            <span className="deal-up-to">UP TO</span>
+            <strong>33%</strong>
+            <span className="deal-off">OFF SELECTED FINDS</span>
+            <div className="deal-divider" />
+            <span className="deal-timer-label">DEMO COUNTDOWN</span>
+            <div className="deal-timer">
+              <span>{String(timeLeft.hours).padStart(2, "0")}</span>
+              <b>:</b>
+              <span>{String(timeLeft.minutes).padStart(2, "0")}</span>
+              <b>:</b>
+              <span>{String(timeLeft.seconds).padStart(2, "0")}</span>
+            </div>
+            <small>Illustrative timer — not a real sale deadline</small>
           </div>
+        </section>
+
+        <section className="section featured-section" id="shop-products">
+          <div className="section-heading">
+            <div>
+              <span className="section-kicker">PICKED FOR YOUR DISCOVERY</span>
+              <h2>Find your favourites</h2>
+              <p>Explore the latest styles and everyday essentials.</p>
+            </div>
+          </div>
+
+          <div className="filter-row">
+            <div className="filter-chips" aria-label="Filter products">
+              {categories.map((category) => (
+                <button
+                  key={category.name}
+                  type="button"
+                  className={`filter-chip ${
+                    activeCategory === category.name ? "active" : ""
+                  }`}
+                  onClick={() => setActiveCategory(category.name)}
+                >
+                  {category.name}
+                </button>
+              ))}
+            </div>
+            <span className="result-count">
+              {filteredProducts.length} products
+            </span>
+          </div>
+
+          {filteredProducts.length > 0 ? (
+            <div className="product-grid">
+              {filteredProducts.map((product) => (
+                <article className="product-card" key={product.id}>
+                  <a
+                    className="product-image"
+                    href={`/products/${product.id}`}
+                    style={{ backgroundColor: product.color }}
+                    aria-label={`View ${product.name}`}
+                  >
+                    <span className="product-tag">{product.label}</span>
+                    <span className="product-emoji">{product.icon}</span>
+                    <span className="quick-view">Explore product ↗</span>
+                  </a>
+
+                  <div className="product-info">
+                    <span className="product-category">
+                      {product.category}
+                    </span>
+                    <a href={`/products/${product.id}`}>
+                      <h3>{product.name}</h3>
+                    </a>
+
+                    <div className="product-rating">
+                      <span>★ {product.rating}</span>
+                      <span className="rating-caption">Sample rating</span>
+                    </div>
+
+                    <div className="product-price-row">
+                      <strong>{money(product.price)}</strong>
+                      <del>{money(product.oldPrice)}</del>
+                      <span className="discount">
+                        {product.discount}% off
+                      </span>
+                    </div>
+
+                    <button
+                      className="add-cart-button"
+                      type="button"
+                      onClick={() =>
+                        setCartCount((count) => count + 1)
+                      }
+                    >
+                      Add to demo cart <span>＋</span>
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-results">
+              <span>⌕</span>
+              <h3>No matching products</h3>
+              <p>Try another search or choose a different category.</p>
+              <button
+                className="primary-button"
+                type="button"
+                onClick={() => {
+                  setSearch("");
+                  setActiveCategory("All");
+                }}
+              >
+                Clear filters
+              </button>
+            </div>
+          )}
+
           <p className="demo-note">
-            Sample homepage products are for design preview. Live product
-            listings will be connected to the NovaCart API in a later step.
+            Preview catalog only. Product prices, ratings, offers and
+            inventory must be verified against live marketplace data.
           </p>
         </section>
 
         <section className="seller-banner">
           <div>
-            <span className="section-kicker">GROW WITH NOVACART</span>
-            <h2>Your products deserve to be discovered.</h2>
+            <span className="section-kicker">YOUR BUSINESS, YOUR NEXT CHAPTER</span>
+            <h2>Have something worth discovering?</h2>
             <p>
-              Bring your store to a marketplace built for new finds and
-              independent sellers.
+              Bring your products to NovaCart and connect with shoppers
+              looking for something different.
             </p>
           </div>
           <a className="seller-button" href="/vendor">
@@ -288,11 +491,11 @@ export default function HomePage() {
 
         <section className="newsletter">
           <div>
-            <span className="section-kicker">A LITTLE INSPIRATION</span>
-            <h2>Your next favourite starts here.</h2>
-            <p>Explore fresh finds and discover something different.</p>
+            <span className="section-kicker">YOUR NEXT FAVOURITE STARTS HERE</span>
+            <h2>There is more to discover.</h2>
+            <p>Explore collections and find something that feels like you.</p>
           </div>
-          <a className="primary-button" href="/products">
+          <a className="primary-button" href="#shop-products">
             Start exploring <span>→</span>
           </a>
         </section>
@@ -303,31 +506,37 @@ export default function HomePage() {
           <div className="footer-brand">
             <a className="brand" href="/">
               <span className="brand-symbol">N</span>
-              <span>nova<span className="brand-accent">cart</span></span>
+              <span>
+                nova<span className="brand-accent">cart</span>
+              </span>
             </a>
             <p>
               A marketplace for distinctive fashion, everyday essentials,
               and exciting discoveries.
             </p>
           </div>
+
           <div className="footer-column">
             <strong>Discover</strong>
-            <a href="/products">All products</a>
-            <a href="/products?category=fashion">Fashion</a>
-            <a href="/products?category=electronics">Electronics</a>
+            <a href="#shop-products">Shop all</a>
+            <a href="#categories">Categories</a>
+            <a href="#deals">Deals and offers</a>
           </div>
+
           <div className="footer-column">
             <strong>Your account</strong>
             <a href="/account">My account</a>
             <a href="/orders">My orders</a>
-            <a href="/cart">Shopping cart</a>
+            <a href="#shop-products">Shopping</a>
           </div>
+
           <div className="footer-column">
             <strong>Sell on NovaCart</strong>
             <a href="/vendor">Seller portal</a>
             <a href="/vendor/register">Become a seller</a>
           </div>
         </div>
+
         <div className="footer-bottom">
           <span>© 2026 NovaCart. All rights reserved.</span>
           <span>Discover more. Shop differently.</span>
