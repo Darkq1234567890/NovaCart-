@@ -707,7 +707,7 @@ const pageStyles = `
   object-fit: contain;
   mix-blend-mode: multiply;
 }
-`;
+;
 .benefit-strip {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
