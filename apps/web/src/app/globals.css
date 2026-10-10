@@ -1806,73 +1806,71 @@ img {
   color: #16803d;
 }
 
-/* Dismiss button, if present */
-.toast-notice button {
+/* NovaCart: compact top-center cart notification */
+.toast-notice {
+  position: fixed !important;
+  top: 14px !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: 50% !important;
+  transform: translateX(-50%);
+
+  z-index: 9999;
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex: 0 0 26px;
-  width: 26px;
-  height: 26px;
-  margin-left: 3px;
-  padding: 0;
+  gap: 9px;
 
-  color: #737373;
-  background: transparent;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
+  width: max-content;
+  max-width: calc(100vw - 28px);
+  box-sizing: border-box;
+  padding: 11px 15px;
+
+  color: #252525;
+  background: #fff;
+  border: 1px solid #d8eadc;
+  border-left: 4px solid #16803d;
+  border-radius: 9px;
+  box-shadow: 0 5px 22px rgba(0, 0, 0, 0.12);
+
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+
+  animation: novacart-toast-in 220ms ease-out both;
 }
 
-.toast-notice button:hover {
-  background: #f3f4f6;
-  color: #262626;
+.toast-notice > span:first-child {
+  flex: 0 0 auto;
+  color: #16803d;
+  font-size: 17px;
+  font-weight: 700;
 }
 
-.toast-notice button svg {
-  width: 15px;
-  height: 15px;
-}
-
-/* Slide down, remain visible, then fade away */
-@keyframes novacart-toast-life {
-  0% {
+@keyframes novacart-toast-in {
+  from {
     opacity: 0;
-    transform: translate(-50%, -12px);
+    transform: translate(-50%, -10px);
   }
 
-  10% {
+  to {
     opacity: 1;
     transform: translate(-50%, 0);
   }
-
-  82% {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -6px);
-  }
 }
 
-/* Mobile layout */
 @media (max-width: 480px) {
   .toast-notice {
-    top: 12px !important;
-    max-width: calc(100vw - 24px);
+    top: 10px !important;
+    max-width: calc(100vw - 20px);
     padding: 10px 12px;
-    gap: 8px;
+    gap: 7px;
     font-size: 12px;
-    border-radius: 9px;
   }
 }
 
-/* Respect reduced-motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .toast-notice {
     animation: none;
   }
 }
-
