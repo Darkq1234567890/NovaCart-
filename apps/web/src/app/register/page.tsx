@@ -752,6 +752,7 @@ export default function RegisterPage() {
           font-size: 10px;
         }
 
+        
         @media (max-width: 850px) {
           .register-shell {
             padding: 0 20px;
@@ -760,4 +761,113 @@ export default function RegisterPage() {
           .register-layout {
             max-width: 600px;
             grid-template-columns: 1fr;
-            mar
+            margin-top: 10px;
+          }
+
+          .welcome-panel {
+            padding: 32px 30px;
+          }
+
+          .welcome-panel h1 {
+            margin-top: 22px;
+            font-size: 39px;
+          }
+
+          .benefit-list {
+            gap: 16px;
+            margin-top: 25px;
+          }
+
+          .panel-footer {
+            margin-top: 25px;
+          }
+
+          .form-panel {
+            padding: 35px 30px;
+          }
+
+          .page-footer {
+            max-width: 600px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .register-shell {
+            padding: 0 13px;
+          }
+
+          .topbar {
+            min-height: 72px;
+          }
+
+          .logo-mark {
+            width: 37px;
+            height: 37px;
+          }
+
+          .logo-text {
+            font-size: 22px;
+          }
+
+          .top-login {
+            font-size: 11px;
+          }
+
+          .register-layout {
+            margin: 5px auto 23px;
+            border-radius: 17px;
+          }
+
+          .welcome-panel {
+            padding: 25px 22px;
+          }
+
+          .welcome-panel h1 {
+            font-size: 35px;
+            letter-spacing: -1.4px;
+          }
+
+          .welcome-copy {
+            font-size: 13px;
+          }
+
+          .benefit-list {
+            gap: 15px;
+            margin-top: 23px;
+          }
+
+          .benefit-icon {
+            flex-basis: 39px;
+            width: 39px;
+            height: 39px;
+          }
+
+          .form-panel {
+            padding: 29px 21px;
+          }
+
+          .form-heading h2 {
+            font-size: 26px;
+          }
+
+          .mobile-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 22px;
+            color: #64748b;
+            font-size: 12px;
+            text-decoration: none;
+          }
+
+          .page-footer {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding-bottom: 20px;
+          }
+        }
+      `}</style>
+    </main>
+  );
+}
