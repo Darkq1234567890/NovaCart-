@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 type Product = {
   id: number;
@@ -10,10 +10,8 @@ type Product = {
   emoji: string;
   price: number;
   originalPrice: number;
-  rating: string;
-  reviews: number;
+  rating: number;
   discount: number;
-  badge: string;
   background: string;
 };
 
@@ -21,305 +19,126 @@ const categories = [
   { name: "Fashion", emoji: "👕", description: "Korean & Japanese styles", tint: "#eee7ff" },
   { name: "Electronics", emoji: "🎧", description: "Everyday tech essentials", tint: "#dff9f5" },
   { name: "Footwear", emoji: "👟", description: "Step into something new", tint: "#fff0df" },
-  { name: "Accessories", emoji: "👜", description: "Details that stand out", tint: "#ffe7ef" },
+  { name: "Accessories", emoji: "🎒", description: "Details that stand out", tint: "#ffe7ef" },
 ];
 
 const products: Product[] = [
-  {
-    id: 1,
-    name: "Korean Oversized Streetwear Tee",
-    category: "Fashion",
-    emoji: "👕",
-    price: 899,
-    originalPrice: 1499,
-    rating: "4.8",
-    reviews: 124,
-    discount: 40,
-    badge: "BESTSELLER",
-    background: "#eee7ff",
-  },
-  {
-    id: 2,
-    name: "Wireless Noise-Cancelling Headphones",
-    category: "Electronics",
-    emoji: "🎧",
-    price: 1799,
-    originalPrice: 2999,
-    rating: "4.7",
-    reviews: 86,
-    discount: 40,
-    badge: "HOT DEAL",
-    background: "#dff9f5",
-  },
-  {
-    id: 3,
-    name: "Minimal Everyday Sneakers",
-    category: "Footwear",
-    emoji: "👟",
-    price: 1299,
-    originalPrice: 2199,
-    rating: "4.6",
-    reviews: 93,
-    discount: 41,
-    badge: "TRENDING",
-    background: "#fff0df",
-  },
-  {
-    id: 4,
-    name: "Premium Everyday Backpack",
-    category: "Accessories",
-    emoji: "🎒",
-    price: 1099,
-    originalPrice: 1899,
-    rating: "4.5",
-    reviews: 62,
-    discount: 42,
-    badge: "GREAT VALUE",
-    background: "#ffe7ef",
-  },
-  {
-    id: 5,
-    name: "Japanese Minimalist Overshirt",
-    category: "Fashion",
-    emoji: "🧥",
-    price: 1499,
-    originalPrice: 2499,
-    rating: "4.8",
-    reviews: 71,
-    discount: 40,
-    badge: "NEW ARRIVAL",
-    background: "#e8f0ff",
-  },
-  {
-    id: 6,
-    name: "Compact Wireless Earbuds",
-    category: "Electronics",
-    emoji: "🎵",
-    price: 999,
-    originalPrice: 1699,
-    rating: "4.4",
-    reviews: 118,
-    discount: 41,
-    badge: "POPULAR",
-    background: "#fff1df",
-  },
-  {
-    id: 7,
-    name: "Classic Everyday Wristwatch",
-    category: "Accessories",
-    emoji: "⌚",
-    price: 1299,
-    originalPrice: 1999,
-    rating: "4.6",
-    reviews: 54,
-    discount: 35,
-    badge: "TOP PICK",
-    background: "#e4f8ef",
-  },
-  {
-    id: 8,
-    name: "Modern Casual Running Shoes",
-    category: "Footwear",
-    emoji: "👟",
-    price: 1599,
-    originalPrice: 2699,
-    rating: "4.7",
-    reviews: 102,
-    discount: 41,
-    badge: "LIMITED DEAL",
-    background: "#f0eaff",
-  },
+  { id: 1, name: "Korean Oversized Streetwear Tee", category: "Fashion", emoji: "👕", price: 899, originalPrice: 1499, rating: 4.8, discount: 40, background: "#eee7ff" },
+  { id: 2, name: "Wireless Headphones", category: "Electronics", emoji: "🎧", price: 1799, originalPrice: 2999, rating: 4.7, discount: 40, background: "#dff9f5" },
+  { id: 3, name: "Minimal Everyday Sneakers", category: "Footwear", emoji: "👟", price: 1299, originalPrice: 2199, rating: 4.6, discount: 41, background: "#fff0df" },
+  { id: 4, name: "Premium Everyday Backpack", category: "Accessories", emoji: "🎒", price: 1099, originalPrice: 1899, rating: 4.5, discount: 42, background: "#ffe7ef" },
+  { id: 5, name: "Japanese Minimalist Overshirt", category: "Fashion", emoji: "🧥", price: 1499, originalPrice: 2499, rating: 4.8, discount: 40, background: "#e8f0ff" },
+  { id: 6, name: "Compact Wireless Earbuds", category: "Electronics", emoji: "🎵", price: 999, originalPrice: 1699, rating: 4.4, discount: 41, background: "#fff1df" },
+  { id: 7, name: "Classic Everyday Wristwatch", category: "Accessories", emoji: "⌚", price: 1299, originalPrice: 1999, rating: 4.6, discount: 35, background: "#e4f8ef" },
+  { id: 8, name: "Modern Running Shoes", category: "Footwear", emoji: "👟", price: 1599, originalPrice: 2699, rating: 4.7, discount: 41, background: "#f0eaff" },
 ];
 
-const formatPrice = (price: number) =>
-  `₹${price.toLocaleString("en-IN")}`;
+function formatPrice(price: number) {
+  return `₹${price.toLocaleString("en-IN")}`;
+}
 
 export default function HomePage() {
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [sortBy, setSortBy] = useState("featured");
+  const [category, setCategory] = useState("All");
+  const [sort, setSort] = useState("featured");
   const [wishlist, setWishlist] = useState<number[]>([]);
-  const [cartCount, setCartCount] = useState(0);
+  const [cart, setCart] = useState(0);
   const [toast, setToast] = useState("");
 
-  useEffect(() => {
-    if (!toast) return;
-
-    const timeout = window.setTimeout(() => {
-      setToast("");
-    }, 2600);
-
-    return () => window.clearTimeout(timeout);
-  }, [toast]);
-
-  const filteredProducts = useMemo(() => {
+  const visibleProducts = useMemo(() => {
     let result = products.filter((product) => {
       const matchesCategory =
-        activeCategory === "All" ||
-        activeCategory === "Deals" ||
-        product.category === activeCategory;
+        category === "All" ||
+        (category === "Deals" && product.discount >= 40) ||
+        product.category === category;
 
+      const query = search.trim().toLowerCase();
       const matchesSearch =
-        product.name.toLowerCase().includes(search.toLowerCase()) ||
-        product.category.toLowerCase().includes(search.toLowerCase());
+        product.name.toLowerCase().includes(query) ||
+        product.category.toLowerCase().includes(query);
 
       return matchesCategory && matchesSearch;
     });
 
-    if (activeCategory === "Deals") {
-      result = result.filter((product) => product.discount >= 40);
-    }
-
-    if (sortBy === "price-low") {
+    if (sort === "price-low") {
       result = [...result].sort((a, b) => a.price - b.price);
-    } else if (sortBy === "price-high") {
+    } else if (sort === "price-high") {
       result = [...result].sort((a, b) => b.price - a.price);
-    } else if (sortBy === "rating") {
-      result = [...result].sort(
-        (a, b) => Number(b.rating) - Number(a.rating)
-      );
+    } else if (sort === "rating") {
+      result = [...result].sort((a, b) => b.rating - a.rating);
     }
 
     return result;
-  }, [activeCategory, search, sortBy]);
+  }, [search, category, sort]);
 
-  function showMessage(message: string) {
+  function notify(message: string) {
     setToast(message);
+    window.setTimeout(() => setToast(""), 2500);
   }
 
-  function toggleWishlist(product: Product) {
-    const alreadySaved = wishlist.includes(product.id);
+  function goToProducts(selectedCategory?: string) {
+    if (selectedCategory) setCategory(selectedCategory);
+    document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
+  }
 
+  function toggleWishlist(id: number) {
+    const saved = wishlist.includes(id);
     setWishlist((current) =>
-      alreadySaved
-        ? current.filter((id) => id !== product.id)
-        : [...current, product.id]
+      saved ? current.filter((item) => item !== id) : [...current, id]
     );
-
-    showMessage(
-      alreadySaved
-        ? "Removed from your wishlist"
-        : "Added to your wishlist"
-    );
-  }
-
-  function addToCart(product: Product) {
-    setCartCount((count) => count + 1);
-    showMessage(`${product.name} added to your demo cart`);
-  }
-
-  function scrollToProducts() {
-    document.getElementById("products")?.scrollIntoView({
-      behavior: "smooth",
-    });
-  }
-
-  function selectCategory(category: string) {
-    setActiveCategory(category);
-    scrollToProducts();
+    notify(saved ? "Removed from wishlist" : "Added to wishlist");
   }
 
   return (
     <main className="site-shell">
       <div className="announcement">
-        Your next favourite find is waiting.{" "}
-        <strong>Discover deals worth smiling about.</strong>
+        Discover your next favourite find. <strong>Fresh styles. Great vibes.</strong>
       </div>
 
       <header className="site-header">
         <div className="container header-main">
-          <a
-            className="brand"
-            href="#home"
-            aria-label="NovaCart homepage"
-          >
+          <a className="brand" href="#home" aria-label="NovaCart home">
             <span className="brand-mark">N</span>
             <span className="brand-copy">
-              <span className="brand-name">
-                Nova<span>Cart</span>
-              </span>
+              <span className="brand-name">Nova<span>Cart</span></span>
               <span className="brand-tagline">Discover more. Shop better.</span>
             </span>
           </a>
 
           <label className="search-box">
-            <span className="search-icon" aria-hidden="true">
-              ⌕
-            </span>
+            <span className="search-icon" aria-hidden="true">⌕</span>
             <input
               type="search"
-              value={search}
-              onChange={(event) => {
-                setSearch(event.target.value);
-                document.getElementById("products")?.scrollIntoView({
-                  behavior: "smooth",
-                });
-              }}
               placeholder="Search fashion, gadgets, accessories..."
               aria-label="Search products"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
             />
           </label>
 
           <div className="header-actions">
-            <button
-              className="header-action"
-              onClick={() =>
-                showMessage(
-                  wishlist.length
-                    ? `You have ${wishlist.length} saved item${wishlist.length === 1 ? "" : "s"}`
-                    : "Your wishlist is waiting for its first favourite"
-                )
-              }
-            >
-              <span className="action-icon" aria-hidden="true">
-                ♡
-              </span>
+            <button className="header-action" onClick={() => notify(`Wishlist: ${wishlist.length} saved items`)}>
+              <span className="action-icon">♡</span>
               <span className="action-label">Wishlist</span>
             </button>
-
-            <button
-              className="header-action cart-action"
-              onClick={() =>
-                showMessage(
-                  cartCount
-                    ? `Your demo cart has ${cartCount} item${cartCount === 1 ? "" : "s"}`
-                    : "Your cart is empty. Find something you love!"
-                )
-              }
-            >
-              <span className="action-icon" aria-hidden="true">
-                🛍
-              </span>
+            <button className="header-action cart-action" onClick={() => notify(`Your demo cart has ${cart} items`)}>
+              <span className="action-icon">🛍</span>
               <span className="action-label">Cart</span>
-              <span className="cart-count">{cartCount}</span>
+              <span className="cart-count">{cart}</span>
             </button>
           </div>
         </div>
 
-        <nav className="category-nav" aria-label="Shop categories">
-          <button
-            className={activeCategory === "All" ? "active" : ""}
-            onClick={() => selectCategory("All")}
-          >
-            All Products
-          </button>
-          {categories.map((category) => (
+        <nav className="category-nav" aria-label="Product categories">
+          {["All", ...categories.map((item) => item.name), "Deals"].map((item) => (
             <button
-              key={category.name}
-              className={
-                activeCategory === category.name ? "active" : ""
-              }
-              onClick={() => selectCategory(category.name)}
+              key={item}
+              className={category === item ? "active" : ""}
+              onClick={() => goToProducts(item)}
             >
-              {category.name}
+              {item === "All" ? "All Products" : item === "Deals" ? "Today's Deals" : item}
             </button>
           ))}
-          <button
-            className={activeCategory === "Deals" ? "active" : ""}
-            onClick={() => selectCategory("Deals")}
-          >
-            Today&apos;s Deals
-          </button>
         </nav>
       </header>
 
@@ -327,85 +146,38 @@ export default function HomePage() {
         <div className="container">
           <div className="hero">
             <div className="hero-copy">
-              <span className="eyebrow">
-                <span aria-hidden="true">✦</span>
-                YOUR STYLE. YOUR WORLD.
-              </span>
-
-              <h1>
-                Good finds.
-                <br />
-                <span>Great vibes.</span>
-              </h1>
-
+              <span className="eyebrow">✦ YOUR STYLE. YOUR WORLD.</span>
+              <h1>Good finds.<br /><span>Great vibes.</span></h1>
               <p>
-                From Korean streetwear to everyday tech, discover
-                something new with a marketplace made for your style.
+                From Korean streetwear to everyday tech, discover something
+                new with a marketplace made for your style.
               </p>
-
               <div className="hero-actions">
-                <button
-                  className="button-primary"
-                  onClick={scrollToProducts}
-                >
-                  Explore products <span aria-hidden="true">→</span>
+                <button className="button-primary" onClick={() => goToProducts("All")}>
+                  Explore products →
                 </button>
-                <button
-                  className="button-light"
-                  onClick={() => selectCategory("Deals")}
-                >
+                <button className="button-light" onClick={() => goToProducts("Deals")}>
                   Shop the deals
                 </button>
               </div>
             </div>
-
             <div className="hero-visual" aria-hidden="true">
               <div className="hero-orbit" />
               <div className="hero-product">
                 <span className="hero-product-emoji">🛍️</span>
               </div>
-              <div className="floating-tag top">
-                ✨ Fresh finds
-                <small>Your next favourite thing</small>
-              </div>
-              <div className="floating-tag bottom">
-                Up to 42% off
-                <small>Selected demo products</small>
-              </div>
+              <div className="floating-tag top">✨ Fresh finds<small>Something for everyone</small></div>
+              <div className="floating-tag bottom">Up to 42% off<small>Selected demo products</small></div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="container benefit-strip" aria-label="Shopping benefits">
-        <div className="benefit">
-          <div className="benefit-icon" aria-hidden="true">🚚</div>
-          <div>
-            <strong>Easy shopping</strong>
-            <span>A simpler way to discover</span>
-          </div>
-        </div>
-        <div className="benefit">
-          <div className="benefit-icon" aria-hidden="true">🛡️</div>
-          <div>
-            <strong>Shop with confidence</strong>
-            <span>Built for a better experience</span>
-          </div>
-        </div>
-        <div className="benefit">
-          <div className="benefit-icon" aria-hidden="true">💜</div>
-          <div>
-            <strong>Unique discoveries</strong>
-            <span>Styles beyond the ordinary</span>
-          </div>
-        </div>
-        <div className="benefit">
-          <div className="benefit-icon" aria-hidden="true">🏪</div>
-          <div>
-            <strong>Seller community</strong>
-            <span>Discover local collections</span>
-          </div>
-        </div>
+      <section className="container benefit-strip" aria-label="Marketplace benefits">
+        <div className="benefit"><div className="benefit-icon">🚚</div><div><strong>Easy shopping</strong><span>A simpler way to discover</span></div></div>
+        <div className="benefit"><div className="benefit-icon">🛡️</div><div><strong>Shop confidently</strong><span>Designed for a better experience</span></div></div>
+        <div className="benefit"><div className="benefit-icon">💜</div><div><strong>Unique discoveries</strong><span>Styles beyond the ordinary</span></div></div>
+        <div className="benefit"><div className="benefit-icon">🏪</div><div><strong>Local sellers</strong><span>Discover new collections</span></div></div>
       </section>
 
       <section className="section">
@@ -416,32 +188,21 @@ export default function HomePage() {
               <h2>Shop by category</h2>
               <p>Explore the things you love, all in one place.</p>
             </div>
-            <button
-              className="text-link"
-              onClick={() => selectCategory("All")}
-            >
-              View all products →
-            </button>
+            <button className="text-link" onClick={() => goToProducts("All")}>View all →</button>
           </div>
 
           <div className="category-grid">
-            {categories.map((category) => (
+            {categories.map((item) => (
               <button
-                key={category.name}
                 className="category-card"
-                style={
-                  {
-                    "--category-tint": category.tint,
-                  } as React.CSSProperties
-                }
-                onClick={() => selectCategory(category.name)}
+                key={item.name}
+                style={{ "--category-tint": item.tint } as React.CSSProperties}
+                onClick={() => goToProducts(item.name)}
               >
-                <span className="category-emoji" aria-hidden="true">
-                  {category.emoji}
-                </span>
+                <span className="category-emoji">{item.emoji}</span>
                 <span className="category-info">
-                  <strong>{category.name}</strong>
-                  <span>{category.description}</span>
+                  <strong>{item.name}</strong>
+                  <span>{item.description}</span>
                 </span>
               </button>
             ))}
@@ -451,22 +212,12 @@ export default function HomePage() {
             <div>
               <div className="section-kicker">A little more for less</div>
               <h2>Find your next great deal.</h2>
-              <p>
-                Explore selected demo products with savings of up to
-                42%. Discover a new favourite today.
-              </p>
+              <p>Explore selected sample products with discounts of up to 42%.</p>
               <div className="hero-actions">
-                <button
-                  className="button-primary"
-                  onClick={() => selectCategory("Deals")}
-                >
-                  Explore deals →
-                </button>
+                <button className="button-primary" onClick={() => goToProducts("Deals")}>Explore deals →</button>
               </div>
             </div>
-            <div className="deal-art" aria-hidden="true">
-              🎁
-            </div>
+            <div className="deal-art" aria-hidden="true">🎁</div>
           </div>
         </div>
       </section>
@@ -476,48 +227,25 @@ export default function HomePage() {
           <div className="section-heading">
             <div>
               <div className="section-kicker">Picked for discovery</div>
-              <h2>
-                {activeCategory === "All"
-                  ? "Trending right now"
-                  : activeCategory === "Deals"
-                    ? "Deals you might love"
-                    : `${activeCategory} collection`}
-              </h2>
-              <p>
-                Browse our sample collection and find something that
-                feels like you.
-              </p>
+              <h2>{category === "All" ? "Trending right now" : category === "Deals" ? "Deals you might love" : `${category} collection`}</h2>
+              <p>Find your next favourite from our sample collection.</p>
             </div>
-            <span className="text-link">
-              {filteredProducts.length} items
-            </span>
+            <span className="text-link">{visibleProducts.length} items</span>
           </div>
 
           <div className="product-toolbar">
-            <div className="filter-chips" aria-label="Filter products">
-              {["All", "Deals", "Fashion", "Electronics", "Footwear", "Accessories"].map(
-                (category) => (
-                  <button
-                    key={category}
-                    className={
-                      activeCategory === category
-                        ? "filter-chip active"
-                        : "filter-chip"
-                    }
-                    onClick={() => setActiveCategory(category)}
-                  >
-                    {category === "All" ? "All products" : category}
-                  </button>
-                )
-              )}
+            <div className="filter-chips">
+              {["All", "Deals", ...categories.map((item) => item.name)].map((item) => (
+                <button
+                  key={item}
+                  className={category === item ? "filter-chip active" : "filter-chip"}
+                  onClick={() => setCategory(item)}
+                >
+                  {item === "All" ? "All products" : item}
+                </button>
+              ))}
             </div>
-
-            <select
-              className="sort-select"
-              value={sortBy}
-              onChange={(event) => setSortBy(event.target.value)}
-              aria-label="Sort products"
-            >
+            <select className="sort-select" value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Sort products">
               <option value="featured">Sort: Featured</option>
               <option value="price-low">Price: Low to high</option>
               <option value="price-high">Price: High to low</option>
@@ -526,96 +254,46 @@ export default function HomePage() {
           </div>
 
           <div className="product-grid">
-            {filteredProducts.length > 0 ? (
-              filteredProducts.map((product) => {
-                const isSaved = wishlist.includes(product.id);
-
-                return (
-                  <article className="product-card" key={product.id}>
-                    <div
-                      className="product-image"
-                      style={
-                        {
-                          "--product-bg": product.background,
-                        } as React.CSSProperties
-                      }
+            {visibleProducts.map((product) => {
+              const saved = wishlist.includes(product.id);
+              return (
+                <article className="product-card" key={product.id}>
+                  <div className="product-image" style={{ "--product-bg": product.background } as React.CSSProperties}>
+                    <span className="product-badge">{product.discount >= 40 ? "HOT DEAL" : "TOP PICK"}</span>
+                    <button
+                      className={saved ? "wishlist-button active" : "wishlist-button"}
+                      onClick={() => toggleWishlist(product.id)}
+                      aria-label={saved ? "Remove from wishlist" : "Add to wishlist"}
+                      aria-pressed={saved}
                     >
-                      <span className="product-badge">
-                        {product.badge}
-                      </span>
-
-                      <button
-                        className={
-                          isSaved
-                            ? "wishlist-button active"
-                            : "wishlist-button"
-                        }
-                        onClick={() => toggleWishlist(product)}
-                        aria-label={
-                          isSaved
-                            ? `Remove ${product.name} from wishlist`
-                            : `Add ${product.name} to wishlist`
-                        }
-                        aria-pressed={isSaved}
-                      >
-                        {isSaved ? "♥" : "♡"}
-                      </button>
-
-                      <span className="product-emoji" aria-hidden="true">
-                        {product.emoji}
-                      </span>
+                      {saved ? "♥" : "♡"}
+                    </button>
+                    <span className="product-emoji" aria-hidden="true">{product.emoji}</span>
+                  </div>
+                  <div className="product-details">
+                    <div className="product-category">{product.category}</div>
+                    <h3 className="product-name">{product.name}</h3>
+                    <div className="product-rating"><span className="rating-pill">★ {product.rating.toFixed(1)}</span><span>Customer rating</span></div>
+                    <div className="product-pricing">
+                      <span className="product-price">{formatPrice(product.price)}</span>
+                      <span className="product-original">{formatPrice(product.originalPrice)}</span>
+                      <span className="product-discount">{product.discount}% off</span>
                     </div>
+                    <button className="add-cart-button" onClick={() => { setCart((count) => count + 1); notify(`${product.name} added to demo cart`); }}>
+                      + Add to cart
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
 
-                    <div className="product-details">
-                      <div className="product-category">
-                        {product.category}
-                      </div>
-                      <h3 className="product-name">{product.name}</h3>
-
-                      <div className="product-rating">
-                        <span className="rating-pill">
-                          ★ {product.rating}
-                        </span>
-                        <span>({product.reviews} reviews)</span>
-                      </div>
-
-                      <div className="product-pricing">
-                        <span className="product-price">
-                          {formatPrice(product.price)}
-                        </span>
-                        <span className="product-original">
-                          {formatPrice(product.originalPrice)}
-                        </span>
-                        <span className="product-discount">
-                          {product.discount}% off
-                        </span>
-                      </div>
-
-                      <button
-                        className="add-cart-button"
-                        onClick={() => addToCart(product)}
-                      >
-                        + Add to cart
-                      </button>
-                    </div>
-                  </article>
-                );
-              })
-            ) : (
+            {visibleProducts.length === 0 && (
               <div className="empty-state">
-                <span aria-hidden="true">🔎</span>
+                <span>🔎</span>
                 <h3>No products found</h3>
-                <p>
-                  Try another search or choose a different category.
-                </p>
+                <p>Try another search or choose a different category.</p>
                 <div className="hero-actions" style={{ justifyContent: "center" }}>
-                  <button
-                    className="button-primary"
-                    onClick={() => {
-                      setSearch("");
-                      setActiveCategory("All");
-                    }}
-                  >
+                  <button className="button-primary" onClick={() => { setSearch(""); setCategory("All"); }}>
                     Clear filters
                   </button>
                 </div>
@@ -628,18 +306,68 @@ export default function HomePage() {
       <section className="container">
         <div className="seller-banner">
           <div>
-            <div className="section-kicker" style={{ color: "#80f3df" }}>
-              Have something to sell?
-            </div>
+            <div className="section-kicker" style={{ color: "#80f3df" }}>HAVE SOMETHING TO SELL?</div>
             <h2>Your store deserves a bigger stage.</h2>
             <p>
-              NovaCart is being built to bring local vendors and
-              international collections together in one marketplace.
-              Get ready to grow your business with us.
+              NovaCart is being built to bring local vendors and international
+              collections together in one marketplace. Get ready to grow with us.
             </p>
             <div className="hero-actions">
-              <button
-                className="button-primary"
-                onClick={() =>
-                  showMessage(
-                    "Seller registration will be available when vendor onboarding is connecte
+              <button className="button-primary" onClick={() => notify("Seller registration will be connected in a later step.")}>
+                Become a seller →
+              </button>
+            </div>
+          </div>
+          <div className="seller-art" aria-hidden="true">🏪</div>
+        </div>
+      </section>
+
+      <footer className="site-footer">
+        <div className="container">
+          <div className="footer-grid">
+            <div>
+              <a className="brand" href="#home">
+                <span className="brand-mark">N</span>
+                <span className="brand-copy">
+                  <span className="brand-name">Nova<span>Cart</span></span>
+                  <span className="brand-tagline">Discover more. Shop better.</span>
+                </span>
+              </a>
+              <p className="footer-brand-copy">
+                A fresh shopping destination for fashion, technology,
+                accessories, and discoveries from sellers near and far.
+              </p>
+            </div>
+            <div className="footer-column">
+              <h3>Explore</h3>
+              <a href="#products">Trending products</a>
+              <a href="#products">Latest deals</a>
+              <a href="#home">Our marketplace</a>
+            </div>
+            <div className="footer-column">
+              <h3>For sellers</h3>
+              <button onClick={() => notify("Vendor onboarding will be connected later.")}>Start selling</button>
+              <button onClick={() => notify("Seller support will be connected later.")}>Seller support</button>
+            </div>
+            <div className="footer-column">
+              <h3>Help & support</h3>
+              <button onClick={() => notify("Help centre integration is not connected yet.")}>Help centre</button>
+              <button onClick={() => notify("Order tracking will be available after backend integration.")}>Track an order</button>
+            </div>
+          </div>
+          <div className="footer-bottom">
+            <span>© {new Date().getFullYear()} NovaCart. All rights reserved.</span>
+            <span>Made for better discoveries ✦</span>
+          </div>
+        </div>
+      </footer>
+
+      {toast && (
+        <div className="toast-notice" role="status" aria-live="polite">
+          <span>✓</span>
+          {toast}
+        </div>
+      )}
+    </main>
+  );
+}
