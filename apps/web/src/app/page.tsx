@@ -996,7 +996,7 @@ const pageStyles = `
 }
 .empty-products h3 { color: var(--nc-ink); margin-bottom: 4px; }
 .empty-products p { font-size: 12px; margin-bottom: 20px; }
-`;
+;
 .newsletter-section {
   position: relative;
   overflow: hidden;
