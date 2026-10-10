@@ -24,90 +24,14 @@ const categories = [
 ];
 
 const products: Product[] = [
-  {
-    id: 1,
-    name: "Korean Oversized T-Shirt",
-    category: "Fashion",
-    price: 1099,
-    originalPrice: 1599,
-    rating: 4.8,
-    reviews: 124,
-    image: "👕",
-    badge: "BESTSELLER",
-  },
-  {
-    id: 2,
-    name: "Wireless Bluetooth Headphones",
-    category: "Electronics",
-    price: 1799,
-    originalPrice: 2499,
-    rating: 4.7,
-    reviews: 89,
-    image: "🎧",
-    badge: "HOT DEAL",
-  },
-  {
-    id: 3,
-    name: "Minimal Everyday Sneakers",
-    category: "Footwear",
-    price: 2199,
-    originalPrice: 2999,
-    rating: 4.6,
-    reviews: 76,
-    image: "👟",
-  },
-  {
-    id: 4,
-    name: "Japanese Minimalist Backpack",
-    category: "Accessories",
-    price: 1499,
-    originalPrice: 2199,
-    rating: 4.8,
-    reviews: 63,
-    image: "🎒",
-    badge: "POPULAR",
-  },
-  {
-    id: 5,
-    name: "Premium Casual Hoodie",
-    category: "Fashion",
-    price: 1899,
-    originalPrice: 2599,
-    rating: 4.7,
-    reviews: 102,
-    image: "🧥",
-  },
-  {
-    id: 6,
-    name: "Compact Wireless Earbuds",
-    category: "Electronics",
-    price: 1299,
-    originalPrice: 1999,
-    rating: 4.5,
-    reviews: 58,
-    image: "🎵",
-  },
-  {
-    id: 7,
-    name: "Classic Everyday Watch",
-    category: "Accessories",
-    price: 999,
-    originalPrice: 1499,
-    rating: 4.6,
-    reviews: 91,
-    image: "⌚",
-  },
-  {
-    id: 8,
-    name: "Streetwear Running Shoes",
-    category: "Footwear",
-    price: 2499,
-    originalPrice: 3499,
-    rating: 4.9,
-    reviews: 147,
-    image: "👟",
-    badge: "TOP RATED",
-  },
+  { id: 1, name: "Korean Oversized T-Shirt", category: "Fashion", price: 1099, originalPrice: 1599, rating: 4.8, reviews: 124, image: "👕", badge: "BESTSELLER" },
+  { id: 2, name: "Wireless Bluetooth Headphones", category: "Electronics", price: 1799, originalPrice: 2499, rating: 4.7, reviews: 89, image: "🎧", badge: "HOT DEAL" },
+  { id: 3, name: "Minimal Everyday Sneakers", category: "Footwear", price: 2199, originalPrice: 2999, rating: 4.6, reviews: 76, image: "👟" },
+  { id: 4, name: "Japanese Minimalist Backpack", category: "Accessories", price: 1499, originalPrice: 2199, rating: 4.8, reviews: 63, image: "🎒", badge: "POPULAR" },
+  { id: 5, name: "Premium Casual Hoodie", category: "Fashion", price: 1899, originalPrice: 2599, rating: 4.7, reviews: 102, image: "🧥" },
+  { id: 6, name: "Compact Wireless Earbuds", category: "Electronics", price: 1299, originalPrice: 1999, rating: 4.5, reviews: 58, image: "🎵" },
+  { id: 7, name: "Classic Everyday Watch", category: "Accessories", price: 999, originalPrice: 1499, rating: 4.6, reviews: 91, image: "⌚" },
+  { id: 8, name: "Streetwear Running Shoes", category: "Footwear", price: 2499, originalPrice: 3499, rating: 4.9, reviews: 147, image: "👟", badge: "TOP RATED" },
 ];
 
 function formatPrice(price: number) {
@@ -134,10 +58,7 @@ export default function HomePage() {
   useEffect(() => {
     if (!toast) return;
 
-    const timer = window.setTimeout(() => {
-      setToast("");
-    }, 2400);
-
+    const timer = window.setTimeout(() => setToast(""), 2400);
     return () => window.clearTimeout(timer);
   }, [toast]);
 
@@ -147,9 +68,10 @@ export default function HomePage() {
         activeCategory === "All Products" ||
         product.category === activeCategory;
 
+      const term = search.trim().toLowerCase();
       const matchesSearch =
-        product.name.toLowerCase().includes(search.toLowerCase()) ||
-        product.category.toLowerCase().includes(search.toLowerCase());
+        product.name.toLowerCase().includes(term) ||
+        product.category.toLowerCase().includes(term);
 
       return matchesCategory && matchesSearch;
     });
@@ -169,33 +91,29 @@ export default function HomePage() {
   const minutes = Math.floor((timeLeft % 3600) / 60);
   const seconds = timeLeft % 60;
 
-  function toggleWishlist(product: Product) {
-    const alreadySaved = wishlist.includes(product.id);
-
-    setWishlist((current) =>
-      alreadySaved
-        ? current.filter((id) => id !== product.id)
-        : [...current, product.id]
-    );
-
-    setToast(
-      alreadySaved
-        ? "Removed from your wishlist"
-        : "Added to your wishlist"
-    );
-  }
-
-  function addToCart(product: Product) {
-    setCart((current) => [...current, product.id]);
-    setToast(`${product.name} added to cart`);
-  }
-
   function selectCategory(category: string) {
     setActiveCategory(category);
     document.getElementById("products")?.scrollIntoView({
       behavior: "smooth",
       block: "start",
     });
+  }
+
+  function toggleWishlist(product: Product) {
+    const saved = wishlist.includes(product.id);
+
+    setWishlist((current) =>
+      saved
+        ? current.filter((id) => id !== product.id)
+        : [...current, product.id]
+    );
+
+    setToast(saved ? "Removed from your wishlist" : "Added to your wishlist");
+  }
+
+  function addToCart(product: Product) {
+    setCart((current) => [...current, product.id]);
+    setToast(`${product.name} added to cart`);
   }
 
   return (
@@ -230,7 +148,7 @@ export default function HomePage() {
             aria-label="Search products"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search for fashion, accessories and more..."
+            placeholder="Search fashion, electronics and more..."
           />
           {search && (
             <button
@@ -251,12 +169,8 @@ export default function HomePage() {
           <button
             className="action-icon"
             type="button"
-            onClick={() =>
-              document.getElementById("products")?.scrollIntoView({
-                behavior: "smooth",
-              })
-            }
-            aria-label="Browse products"
+            onClick={() => selectCategory("All Products")}
+            aria-label="Browse wishlist products"
           >
             <span>♡</span>
             <small>Wishlist</small>
@@ -271,7 +185,7 @@ export default function HomePage() {
             onClick={() =>
               setToast(
                 cart.length
-                  ? `You have ${cart.length} item(s) in your demo cart`
+                  ? `Your demo cart contains ${cart.length} item(s).`
                   : "Your cart is empty. Find something you love!"
               )
             }
@@ -291,9 +205,7 @@ export default function HomePage() {
           {categories.map((category) => (
             <button
               key={category.name}
-              className={`nav-category ${
-                activeCategory === category.name ? "active" : ""
-              }`}
+              className={`nav-category ${activeCategory === category.name ? "active" : ""}`}
               type="button"
               onClick={() => selectCategory(category.name)}
             >
@@ -355,12 +267,13 @@ export default function HomePage() {
         <div className="hero-visual">
           <div className="hero-orbit orbit-one" />
           <div className="hero-orbit orbit-two" />
+
           <div className="hero-product">
             <span className="hero-product-label">THE EVERYDAY EDIT</span>
             <span className="hero-product-emoji">👕</span>
             <span className="hero-product-caption">
               <strong>Effortless style.</strong>
-              <small>Pieces you'll reach for.</small>
+              <small>Pieces you will reach for.</small>
             </span>
           </div>
 
@@ -420,7 +333,9 @@ export default function HomePage() {
         <div className="section-heading">
           <div>
             <span className="section-eyebrow">A LITTLE BIT OF EVERYTHING</span>
-            <h2>Explore by category<span>.</span></h2>
+            <h2>
+              Explore by category<span>.</span>
+            </h2>
           </div>
           <button
             className="text-button"
@@ -554,9 +469,7 @@ export default function HomePage() {
               <button
                 key={category.name}
                 type="button"
-                className={`filter-chip ${
-                  activeCategory === category.name ? "active" : ""
-                }`}
+                className={`filter-chip ${activeCategory === category.name ? "active" : ""}`}
                 onClick={() => setActiveCategory(category.name)}
               >
                 {category.name}
@@ -593,37 +506,26 @@ export default function HomePage() {
                 <article className="product-card" key={product.id}>
                   <div className="product-image">
                     {product.badge && (
-                      <span className="product-badge">
-                        {product.badge}
-                      </span>
+                      <span className="product-badge">{product.badge}</span>
                     )}
 
                     <button
-                      className={`wishlist-button ${
-                        saved ? "saved" : ""
-                      }`}
+                      className={`wishlist-button ${saved ? "saved" : ""}`}
                       type="button"
                       onClick={() => toggleWishlist(product)}
-                      aria-label={
-                        saved ? "Remove from wishlist" : "Add to wishlist"
-                      }
+                      aria-label={saved ? "Remove from wishlist" : "Add to wishlist"}
                     >
                       {saved ? "♥" : "♡"}
                     </button>
 
-                    <span className="product-image-mark">
-                      {product.image}
-                    </span>
-
+                    <span className="product-image-mark">{product.image}</span>
                     <span className="product-image-category">
                       {product.category}
                     </span>
                   </div>
 
                   <div className="product-info">
-                    <span className="product-category">
-                      {product.category}
-                    </span>
+                    <span className="product-category">{product.category}</span>
                     <h3>{product.name}</h3>
 
                     <div className="product-rating">
@@ -668,4 +570,24 @@ export default function HomePage() {
         )}
       </section>
 
-      <section className="selle
+      <section className="seller-banner">
+        <div className="seller-symbol">N.</div>
+        <div className="seller-copy">
+          <span className="section-eyebrow">BUILT FOR INDEPENDENT BRANDS</span>
+          <h2>Your products. A bigger world.</h2>
+          <p>
+            NovaCart brings shoppers and sellers together in one marketplace.
+          </p>
+        </div>
+        <button
+          className="seller-button"
+          type="button"
+          onClick={() => setToast("Seller registration will be available soon.")}
+        >
+          Become a seller <span>↗</span>
+        </button>
+      </section>
+
+      <footer className="site-footer">
+        <div className="footer-main">
+          <a href="#" className="brand foote
