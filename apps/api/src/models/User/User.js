@@ -1,13 +1,13 @@
 const mongoose = require("mongoose");
 
-const userSchema = new mongoose.Schema(
+const pendingRegistrationSchema = new mongoose.Schema(
   {
     name: {
-  type: String,
-  trim: true,
-  maxlength: 100,
-  default: ""
-},
+      type: String,
+      trim: true,
+      maxlength: 100,
+      default: ""
+    },
 
     email: {
       type: String,
@@ -21,54 +21,34 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
-      minlength: 6,
       select: false
     },
 
     phone: {
       type: String,
       trim: true,
-      index: true
-    },
-
-    role: {
-      type: String,
-      enum: [
-        "customer",
-        "vendor",
-        "staff",
-        "admin",
-        "super_admin"
-      ],
-      default: "customer",
-      index: true
-    },
-
-    status: {
-      type: String,
-      enum: ["active", "suspended", "blocked"],
-      default: "active",
-      index: true
-    },
-
-    avatar: {
-      type: String,
       default: ""
     },
 
-    isEmailVerified: {
-      type: Boolean,
-      default: false
+    otpHash: {
+      type: String,
+      required: true,
+      select: false
     },
 
-    isPhoneVerified: {
-      type: Boolean,
-      default: false
-    },
-
-    lastLoginAt: {
+    otpExpiresAt: {
       type: Date,
-      default: null
+      required: true
+    },
+
+    resendAvailableAt: {
+      type: Date,
+      required: true
+    },
+
+    attempts: {
+      type: Number,
+      default: 0
     }
   },
   {
@@ -76,4 +56,13 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("User", userSchema);
+// Automatically remove expired pending registrations.
+pendingRegistrationSchema.index(
+  { otpExpiresAt: 1 },
+  { expireAfterSeconds: 0 }
+);
+
+module.exports = mongoose.model(
+  "PendingRegistration",
+  pendingRegistrationSchema
+);
