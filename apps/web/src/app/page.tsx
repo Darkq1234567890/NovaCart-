@@ -1,3 +1,4 @@
+"use client";
 const categories = [
   { name: "Korean Fashion", icon: "👕", color: "#e8efff" },
   { name: "Japanese Style", icon: "👘", color: "#fce7f3" },
