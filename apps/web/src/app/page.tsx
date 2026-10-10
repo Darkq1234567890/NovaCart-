@@ -4,188 +4,187 @@
 import { useEffect, useMemo, useState } from "react";
 
 const categories = [
-  { name: "All", icon: "✦" },
-  { name: "Korean Fashion", icon: "👕" },
-  { name: "Japanese Style", icon: "👘" },
-  { name: "Electronics", icon: "🎧" },
-  { name: "Footwear", icon: "👟" },
-  { name: "Accessories", icon: "⌚" },
+  { name: "All Products", icon: "✦" },
+  { name: "Fashion", icon: "◈" },
+  { name: "Electronics", icon: "⌁" },
+  { name: "Footwear", icon: "♧" },
+  { name: "Accessories", icon: "◇" },
+  { name: "Home & Living", icon: "⌂" },
 ];
 
 const products = [
   {
     id: 1,
-    name: "Korean Oversized T-Shirt",
-    category: "Korean Fashion",
-    price: 1099,
-    oldPrice: 1499,
-    discount: 27,
-    rating: 4.6,
-    icon: "👕",
-    color: "#e6edff",
+    name: "Essential Oversized Tee",
+    category: "Fashion",
+    price: 799,
+    originalPrice: 1199,
+    rating: 4.8,
+    reviews: 124,
+    emoji: "👕",
+    color: "mint",
     label: "BESTSELLER",
   },
   {
     id: 2,
-    name: "Minimal Wireless Headphones",
+    name: "Studio Wireless Headphones",
     category: "Electronics",
-    price: 1899,
-    oldPrice: 2499,
-    discount: 24,
-    rating: 4.5,
-    icon: "🎧",
-    color: "#e0f2fe",
-    label: "HOT DEAL",
+    price: 2499,
+    originalPrice: 3499,
+    rating: 4.7,
+    reviews: 86,
+    emoji: "🎧",
+    color: "lavender",
+    label: "TOP PICK",
   },
   {
     id: 3,
-    name: "Japanese Everyday Backpack",
-    category: "Japanese Style",
-    price: 1499,
-    oldPrice: 1999,
-    discount: 25,
-    rating: 4.7,
-    icon: "🎒",
-    color: "#fce7f3",
+    name: "Everyday Street Sneakers",
+    category: "Footwear",
+    price: 1899,
+    originalPrice: 2799,
+    rating: 4.6,
+    reviews: 213,
+    emoji: "👟",
+    color: "sand",
     label: "TRENDING",
   },
   {
     id: 4,
-    name: "Classic Street Sneakers",
-    category: "Footwear",
-    price: 2299,
-    oldPrice: 2999,
-    discount: 23,
-    rating: 4.4,
-    icon: "👟",
-    color: "#dcfce7",
+    name: "Minimal Crossbody Bag",
+    category: "Accessories",
+    price: 999,
+    originalPrice: 1499,
+    rating: 4.8,
+    reviews: 67,
+    emoji: "👜",
+    color: "rose",
     label: "NEW ARRIVAL",
   },
   {
     id: 5,
-    name: "Everyday Minimal Watch",
-    category: "Accessories",
-    price: 1299,
-    oldPrice: 1799,
-    discount: 28,
-    rating: 4.3,
-    icon: "⌚",
-    color: "#fef3c7",
-    label: "LIMITED DEAL",
-  },
-  {
-    id: 6,
-    name: "Japanese Relaxed Hoodie",
-    category: "Japanese Style",
-    price: 1799,
-    oldPrice: 2299,
-    discount: 22,
-    rating: 4.8,
-    icon: "🧥",
-    color: "#ede9fe",
-    label: "TOP RATED",
-  },
-  {
-    id: 7,
-    name: "Korean Everyday Sneakers",
-    category: "Korean Fashion",
-    price: 1999,
-    oldPrice: 2699,
-    discount: 26,
+    name: "Everyday Smart Watch",
+    category: "Electronics",
+    price: 3299,
+    originalPrice: 4499,
     rating: 4.5,
-    icon: "👟",
-    color: "#ffe4e6",
+    reviews: 102,
+    emoji: "⌚",
+    color: "lavender",
     label: "POPULAR",
   },
   {
-    id: 8,
-    name: "Portable Music Earbuds",
-    category: "Electronics",
-    price: 999,
-    oldPrice: 1499,
-    discount: 33,
-    rating: 4.4,
-    icon: "🎵",
-    color: "#dbeafe",
+    id: 6,
+    name: "Relaxed Fit Cargo Pants",
+    category: "Fashion",
+    price: 1399,
+    originalPrice: 1999,
+    rating: 4.7,
+    reviews: 91,
+    emoji: "👖",
+    color: "mint",
+    label: "TRENDING",
+  },
+  {
+    id: 7,
+    name: "Modern Ceramic Mug Set",
+    category: "Home & Living",
+    price: 649,
+    originalPrice: 899,
+    rating: 4.6,
+    reviews: 54,
+    emoji: "☕",
+    color: "sand",
     label: "GREAT VALUE",
+  },
+  {
+    id: 8,
+    name: "Classic Everyday Sunglasses",
+    category: "Accessories",
+    price: 599,
+    originalPrice: 999,
+    rating: 4.4,
+    reviews: 73,
+    emoji: "🕶️",
+    color: "rose",
+    label: "JUST IN",
   },
 ];
 
 const money = (amount: number) =>
-  `₹${amount.toLocaleString("en-IN")}`;
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(amount);
 
 export default function HomePage() {
-  const [activeCategory, setActiveCategory] = useState("All");
   const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState("All Products");
   const [cartCount, setCartCount] = useState(0);
-  const [timeLeft, setTimeLeft] = useState({
-    hours: 5,
-    minutes: 59,
-    seconds: 59,
-  });
+  const [favorites, setFavorites] = useState<number[]>([]);
+  const [timeLeft, setTimeLeft] = useState(8 * 60 * 60 + 24 * 60 + 36);
+  const [notice, setNotice] = useState("");
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      setTimeLeft((previous) => {
-        if (
-          previous.hours === 0 &&
-          previous.minutes === 0 &&
-          previous.seconds === 0
-        ) {
-          return { hours: 5, minutes: 59, seconds: 59 };
-        }
-
-        if (previous.seconds > 0) {
-          return { ...previous, seconds: previous.seconds - 1 };
-        }
-
-        if (previous.minutes > 0) {
-          return {
-            ...previous,
-            minutes: previous.minutes - 1,
-            seconds: 59,
-          };
-        }
-
-        return {
-          hours: previous.hours - 1,
-          minutes: 59,
-          seconds: 59,
-        };
-      });
+      setTimeLeft((current) => (current > 0 ? current - 1 : 0));
     }, 1000);
 
     return () => window.clearInterval(timer);
   }, []);
 
   const filteredProducts = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
     return products.filter((product) => {
       const matchesCategory =
-        activeCategory === "All" ||
+        activeCategory === "All Products" ||
         product.category === activeCategory;
 
-      const searchText = search.trim().toLowerCase();
       const matchesSearch =
-        !searchText ||
-        product.name.toLowerCase().includes(searchText) ||
-        product.category.toLowerCase().includes(searchText);
+        !query ||
+        product.name.toLowerCase().includes(query) ||
+        product.category.toLowerCase().includes(query);
 
       return matchesCategory && matchesSearch;
     });
-  }, [activeCategory, search]);
+  }, [search, activeCategory]);
+
+  const hours = String(Math.floor(timeLeft / 3600)).padStart(2, "0");
+  const minutes = String(Math.floor((timeLeft % 3600) / 60)).padStart(
+    2,
+    "0"
+  );
+  const seconds = String(timeLeft % 60).padStart(2, "0");
+
+  function addToCart(productName: string) {
+    setCartCount((count) => count + 1);
+    setNotice(`${productName} added to your demo cart.`);
+    window.setTimeout(() => setNotice(""), 2500);
+  }
+
+  function toggleFavorite(id: number) {
+    setFavorites((current) =>
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id]
+    );
+  }
 
   return (
     <main>
-      <div className="top-strip">
-        <span>Discover your style. Find your next favourite.</span>
-        <span>New-season finds • Exciting everyday discoveries</span>
+      <div className="announcement">
+        <span className="announcement-dot" />
+        A little more style, a little less spend.
+        <a href="#deals">Explore today&apos;s offers ↗</a>
       </div>
 
       <header className="site-header">
-        <a className="brand" href="/" aria-label="NovaCart home">
-          <span className="brand-symbol">N</span>
-          <span>
-            nova<span className="brand-accent">cart</span>
+        <a href="#" className="brand" aria-label="NovaCart home">
+          <span className="brand-mark">n.</span>
+          <span className="brand-name">
+            nova<span>cart</span>
           </span>
         </a>
 
@@ -194,354 +193,438 @@ export default function HomePage() {
           onSubmit={(event) => {
             event.preventDefault();
             document
-              .getElementById("shop-products")
+              .getElementById("products")
               ?.scrollIntoView({ behavior: "smooth" });
           }}
         >
-          <span className="search-icon">⌕</span>
+          <span className="search-icon" aria-hidden="true">
+            ⌕
+          </span>
           <input
-            type="search"
-            placeholder="Search products, brands and styles..."
-            aria-label="Search products"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search for products, styles and more"
+            aria-label="Search products"
           />
-          <button type="submit">Search</button>
+          {search && (
+            <button
+              type="button"
+              className="clear-search"
+              onClick={() => setSearch("")}
+              aria-label="Clear search"
+            >
+              ×
+            </button>
+          )}
+          <button className="search-submit" type="submit">
+            Search
+          </button>
         </form>
 
-        <nav className="header-actions" aria-label="Shopping navigation">
-          <a href="/account">♙ <span>Account</span></a>
-          <a href="/orders">▤ <span>Orders</span></a>
-          <a className="cart-link" href="#shop-products">
-            ♧ <span>Cart</span>
+        <nav className="header-actions" aria-label="Main navigation">
+          <a className="account-link" href="#account">
+            <span className="action-icon">♙</span>
+            <span>Account</span>
+          </a>
+          <a className="cart-link" href="#products">
+            <span className="action-icon">♧</span>
+            <span>Cart</span>
             <span className="cart-count">{cartCount}</span>
           </a>
         </nav>
       </header>
 
-      <nav className="category-nav" aria-label="Main categories">
-        <a href="#shop-products">Shop All</a>
-        <a href="#categories">Categories</a>
-        <a href="#deals">Today's Deals</a>
-        <a href="#shop-products">Trending</a>
-        <a href="/vendor">Sell on NovaCart</a>
+      <nav className="category-nav" aria-label="Product categories">
+        <div className="category-nav-inner">
+          {categories.map((category) => (
+            <button
+              key={category.name}
+              className={`nav-category ${
+                activeCategory === category.name ? "selected" : ""
+              }`}
+              onClick={() => {
+                setActiveCategory(category.name);
+                document
+                  .getElementById("products")
+                  ?.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
+              <span>{category.icon}</span>
+              {category.name}
+            </button>
+          ))}
+        </div>
       </nav>
 
-      <div className="page-container">
-        <section className="hero">
-          <div className="hero-content">
-            <span className="eyebrow">THE NEW WAY TO DISCOVER</span>
-            <h1>
-              Your style.
-              <br />
-              <span>Your discovery.</span>
-            </h1>
-            <p>
-              From Korean streetwear to Japanese-inspired essentials,
-              discover products that make everyday shopping exciting.
-            </p>
-
-            <div className="hero-actions">
-              <a className="primary-button" href="#shop-products">
-                Shop the collection <span>→</span>
-              </a>
-              <a className="text-button" href="#deals">
-                Explore deals ↓
-              </a>
-            </div>
-
-            <div className="hero-trust">
-              <span><b>✓</b> Multiple sellers</span>
-              <span><b>✓</b> Fresh discoveries</span>
-            </div>
+      <section className="hero">
+        <div className="hero-copy">
+          <div className="hero-eyebrow">
+            <span className="eyebrow-line" />
+            YOUR STYLE, YOUR WORLD
           </div>
-
-          <div className="hero-art">
-            <div className="art-orbit orbit-one" />
-            <div className="art-orbit orbit-two" />
-            <div className="hero-product hero-shirt">👕</div>
-            <div className="hero-product hero-headphones">🎧</div>
-            <div className="hero-product hero-shoe">👟</div>
-            <div className="floating-card card-top">
-              <span>✦</span> New season, new style
-            </div>
-            <div className="floating-card card-bottom">
-              <span className="online-dot" />
-              Your next favourite awaits
-            </div>
-          </div>
-        </section>
-
-        <section className="benefit-row">
-          <div className="benefit">
-            <span className="benefit-icon">◇</span>
-            <div>
-              <strong>Discover more</strong>
-              <small>Explore unique finds</small>
-            </div>
-          </div>
-          <div className="benefit">
-            <span className="benefit-icon">♧</span>
-            <div>
-              <strong>Multiple sellers</strong>
-              <small>More choice in one place</small>
-            </div>
-          </div>
-          <div className="benefit">
-            <span className="benefit-icon">✓</span>
-            <div>
-              <strong>Secure shopping</strong>
-              <small>Shop with confidence</small>
-            </div>
-          </div>
-          <div className="benefit">
-            <span className="benefit-icon">↗</span>
-            <div>
-              <strong>Fresh collections</strong>
-              <small>Find your next favourite</small>
-            </div>
-          </div>
-        </section>
-
-        <section className="section" id="categories">
-          <div className="section-heading">
-            <div>
-              <span className="section-kicker">YOUR WORLD, YOUR STYLE</span>
-              <h2>Explore categories</h2>
-              <p>Start with what you love.</p>
-            </div>
-          </div>
-
-          <div className="category-grid">
-            {categories.filter((category) => category.name !== "All").map(
-              (category) => (
-                <button
-                  className="category-card"
-                  key={category.name}
-                  type="button"
-                  onClick={() => {
-                    setActiveCategory(category.name);
-                    document
-                      .getElementById("shop-products")
-                      ?.scrollIntoView({ behavior: "smooth" });
-                  }}
-                >
-                  <span className="category-art">
-                    {category.icon}
-                  </span>
-                  <strong>{category.name}</strong>
-                  <span className="category-arrow">↗</span>
-                </button>
-              ),
-            )}
-          </div>
-        </section>
-
-        <section className="deal-banner" id="deals">
-          <div className="deal-copy">
-            <span className="deal-kicker">THE DISCOVERY SALE</span>
-            <h2>
-              Good finds.
-              <br />
-              Even better prices.
-            </h2>
-            <p>
-              Explore special prices on selected fashion, accessories
-              and everyday essentials.
-            </p>
-            <a className="deal-button" href="#shop-products">
-              Shop the deals <span>→</span>
+          <h1>
+            Good finds.
+            <br />
+            <span>Great feelings.</span>
+          </h1>
+          <p>
+            Discover everyday essentials, fresh fashion and thoughtful
+            accessories—all in one place, picked for your kind of life.
+          </p>
+          <div className="hero-buttons">
+            <a className="button-primary" href="#products">
+              Explore collection <span>↗</span>
+            </a>
+            <a className="button-text" href="#deals">
+              See today&apos;s deals <span>→</span>
             </a>
           </div>
-
-          <div className="deal-highlight">
-            <span className="deal-sparkle">✳</span>
-            <span className="deal-up-to">UP TO</span>
-            <strong>33%</strong>
-            <span className="deal-off">OFF SELECTED FINDS</span>
-            <div className="deal-divider" />
-            <span className="deal-timer-label">DEMO COUNTDOWN</span>
-            <div className="deal-timer">
-              <span>{String(timeLeft.hours).padStart(2, "0")}</span>
-              <b>:</b>
-              <span>{String(timeLeft.minutes).padStart(2, "0")}</span>
-              <b>:</b>
-              <span>{String(timeLeft.seconds).padStart(2, "0")}</span>
+          <div className="hero-proof">
+            <div className="proof-avatars" aria-hidden="true">
+              <span>J</span>
+              <span>A</span>
+              <span>M</span>
             </div>
-            <small>Illustrative timer — not a real sale deadline</small>
-          </div>
-        </section>
-
-        <section className="section featured-section" id="shop-products">
-          <div className="section-heading">
             <div>
-              <span className="section-kicker">PICKED FOR YOUR DISCOVERY</span>
-              <h2>Find your favourites</h2>
-              <p>Explore the latest styles and everyday essentials.</p>
+              <strong>Made for everyday you</strong>
+              <small>Style, value and variety together</small>
             </div>
           </div>
+        </div>
 
-          <div className="filter-row">
-            <div className="filter-chips" aria-label="Filter products">
-              {categories.map((category) => (
-                <button
-                  key={category.name}
-                  type="button"
-                  className={`filter-chip ${
-                    activeCategory === category.name ? "active" : ""
-                  }`}
-                  onClick={() => setActiveCategory(category.name)}
-                >
-                  {category.name}
-                </button>
-              ))}
+        <div className="hero-visual" aria-label="A curated selection of products">
+          <div className="hero-orbit orbit-one" />
+          <div className="hero-orbit orbit-two" />
+          <div className="hero-sticker">
+            <span>THE</span>
+            <strong>GOOD</strong>
+            <strong>FINDS</strong>
+            <span>COLLECTION</span>
+          </div>
+          <div className="hero-product hero-product-main">
+            <div className="hero-product-emoji">👟</div>
+            <div className="hero-product-caption">
+              <span>EVERYDAY EDIT</span>
+              <strong>Made to move.</strong>
             </div>
-            <span className="result-count">
-              {filteredProducts.length} products
+          </div>
+          <div className="hero-floating-card floating-top">
+            <span className="floating-icon">✳</span>
+            <span>
+              <strong>Fresh picks</strong>
+              <small>Discover something new</small>
             </span>
           </div>
+          <div className="hero-floating-card floating-bottom">
+            <span className="floating-check">✓</span>
+            <span>
+              <strong>Style meets value</strong>
+              <small>Find your next favourite</small>
+            </span>
+          </div>
+          <span className="hero-decoration decoration-one">✳</span>
+          <span className="hero-decoration decoration-two">✦</span>
+        </div>
+      </section>
 
-          {filteredProducts.length > 0 ? (
-            <div className="product-grid">
-              {filteredProducts.map((product) => (
+      <section className="benefit-strip" aria-label="Shopping highlights">
+        <div className="benefit">
+          <span className="benefit-icon">◇</span>
+          <span>
+            <strong>Curated collections</strong>
+            <small>Picked with care</small>
+          </span>
+        </div>
+        <div className="benefit">
+          <span className="benefit-icon">↗</span>
+          <span>
+            <strong>Everyday value</strong>
+            <small>Deals worth finding</small>
+          </span>
+        </div>
+        <div className="benefit">
+          <span className="benefit-icon">◎</span>
+          <span>
+            <strong>Multiple sellers</strong>
+            <small>More choice for you</small>
+          </span>
+        </div>
+        <div className="benefit">
+          <span className="benefit-icon">♡</span>
+          <span>
+            <strong>Made for you</strong>
+            <small>Discover your favourites</small>
+          </span>
+        </div>
+      </section>
+
+      <section className="section category-section" id="categories">
+        <div className="section-heading">
+          <div>
+            <span className="section-kicker">FIND YOUR SOMETHING</span>
+            <h2>Shop by category<span>.</span></h2>
+            <p>A good place to start your next discovery.</p>
+          </div>
+          <a
+            href="#products"
+            className="section-link"
+            onClick={() => setActiveCategory("All Products")}
+          >
+            All collections <span>↗</span>
+          </a>
+        </div>
+
+        <div className="category-grid">
+          {[
+            {
+              name: "Fashion",
+              description: "Everyday looks",
+              emoji: "👕",
+              color: "mint",
+            },
+            {
+              name: "Electronics",
+              description: "Little upgrades",
+              emoji: "🎧",
+              color: "lavender",
+            },
+            {
+              name: "Footwear",
+              description: "Step out well",
+              emoji: "👟",
+              color: "sand",
+            },
+            {
+              name: "Accessories",
+              description: "The finishing touch",
+              emoji: "👜",
+              color: "rose",
+            },
+          ].map((category) => (
+            <button
+              key={category.name}
+              className="category-card"
+              onClick={() => {
+                setActiveCategory(category.name);
+                document
+                  .getElementById("products")
+                  ?.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
+              <span className={`category-art ${category.color}`}>
+                <span className="category-emoji">{category.emoji}</span>
+                <span className="category-art-spark">✳</span>
+              </span>
+              <span className="category-card-copy">
+                <strong>{category.name}</strong>
+                <small>{category.description}</small>
+              </span>
+              <span className="category-arrow">↗</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="deal-banner" id="deals">
+        <div className="deal-copy">
+          <span className="deal-kicker">THE LITTLE EXTRA EVENT</span>
+          <h2>
+            Good things.
+            <br />
+            <span>Better prices.</span>
+          </h2>
+          <p>
+            Find a new favourite with handpicked offers across everyday
+            essentials and standout styles.
+          </p>
+          <a className="deal-button" href="#products">
+            Explore the offers <span>↗</span>
+          </a>
+          <small className="deal-disclaimer">
+            Demo promotion · Sample prices and timer
+          </small>
+        </div>
+        <div className="deal-art">
+          <div className="deal-ring" />
+          <div className="deal-product deal-product-left">🎧</div>
+          <div className="deal-product deal-product-center">👟</div>
+          <div className="deal-product deal-product-right">👜</div>
+          <div className="deal-offer-stamp">
+            <span>UP TO</span>
+            <strong>33%</strong>
+            <span>OFF*</span>
+          </div>
+          <div className="deal-timer-card">
+            <span>DEMO COUNTDOWN</span>
+            <div className="deal-timer">
+              <strong>{hours}</strong>
+              <i>:</i>
+              <strong>{minutes}</strong>
+              <i>:</i>
+              <strong>{seconds}</strong>
+            </div>
+            <small>Hours&nbsp;&nbsp; Min&nbsp;&nbsp; Sec</small>
+          </div>
+        </div>
+      </section>
+
+      <section className="section featured-section" id="products">
+        <div className="section-heading">
+          <div>
+            <span className="section-kicker">A FEW GOOD FINDS</span>
+            <h2>
+              Things you&apos;ll <span>love.</span>
+            </h2>
+            <p>Fresh picks for your wardrobe, desk and everyday life.</p>
+          </div>
+          <span className="product-count">
+            {filteredProducts.length} products
+          </span>
+        </div>
+
+        <div className="product-toolbar">
+          <div className="filter-chips" aria-label="Filter products">
+            {categories.map((category) => (
+              <button
+                key={category.name}
+                className={`filter-chip ${
+                  activeCategory === category.name ? "active" : ""
+                }`}
+                onClick={() => setActiveCategory(category.name)}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+          <label className="sort-label">
+            <span>View</span>
+            <select
+              aria-label="Sort products"
+              onChange={(event) => {
+                const value = event.target.value;
+                if (value === "price-low") {
+                  setNotice("For this demo, products remain in their original order.");
+                  window.setTimeout(() => setNotice(""), 2500);
+                }
+              }}
+              defaultValue="featured"
+            >
+              <option value="featured">Featured</option>
+              <option value="price-low">Price: low to high</option>
+            </select>
+          </label>
+        </div>
+
+        {filteredProducts.length > 0 ? (
+          <div className="product-grid">
+            {filteredProducts.map((product) => {
+              const discount = Math.round(
+                (1 - product.price / product.originalPrice) * 100
+              );
+
+              return (
                 <article className="product-card" key={product.id}>
-                  <a
-                    className="product-image"
-                    href={`/products/${product.id}`}
-                    style={{ backgroundColor: product.color }}
-                    aria-label={`View ${product.name}`}
-                  >
+                  <div className={`product-image ${product.color}`}>
                     <span className="product-tag">{product.label}</span>
-                    <span className="product-emoji">{product.icon}</span>
-                    <span className="quick-view">Explore product ↗</span>
-                  </a>
-
-                  <div className="product-info">
-                    <span className="product-category">
-                      {product.category}
-                    </span>
-                    <a href={`/products/${product.id}`}>
-                      <h3>{product.name}</h3>
-                    </a>
-
-                    <div className="product-rating">
-                      <span>★ {product.rating}</span>
-                      <span className="rating-caption">Sample rating</span>
-                    </div>
-
-                    <div className="product-price-row">
-                      <strong>{money(product.price)}</strong>
-                      <del>{money(product.oldPrice)}</del>
-                      <span className="discount">
-                        {product.discount}% off
-                      </span>
-                    </div>
-
                     <button
-                      className="add-cart-button"
-                      type="button"
-                      onClick={() =>
-                        setCartCount((count) => count + 1)
+                      className={`wishlist-button ${
+                        favorites.includes(product.id) ? "is-favorite" : ""
+                      }`}
+                      onClick={() => toggleFavorite(product.id)}
+                      aria-label={
+                        favorites.includes(product.id)
+                          ? "Remove from wishlist"
+                          : "Add to wishlist"
                       }
                     >
-                      Add to demo cart <span>＋</span>
+                      {favorites.includes(product.id) ? "♥" : "♡"}
+                    </button>
+                    <span className="product-emoji">{product.emoji}</span>
+                    <span className="product-image-mark">N.</span>
+                  </div>
+                  <div className="product-info">
+                    <span className="product-category">{product.category}</span>
+                    <h3>{product.name}</h3>
+                    <div className="product-rating">
+                      <span>★ {product.rating}</span>
+                      <small>({product.reviews} reviews)</small>
+                    </div>
+                    <div className="product-price-row">
+                      <strong>{money(product.price)}</strong>
+                      <del>{money(product.originalPrice)}</del>
+                      <span className="discount">{discount}% off</span>
+                    </div>
+                    <button
+                      className="add-cart-button"
+                      onClick={() => addToCart(product.name)}
+                    >
+                      <span>＋</span> Add to cart
                     </button>
                   </div>
                 </article>
-              ))}
-            </div>
-          ) : (
-            <div className="empty-results">
-              <span>⌕</span>
-              <h3>No matching products</h3>
-              <p>Try another search or choose a different category.</p>
-              <button
-                className="primary-button"
-                type="button"
-                onClick={() => {
-                  setSearch("");
-                  setActiveCategory("All");
-                }}
-              >
-                Clear filters
-              </button>
-            </div>
-          )}
+              );
+            })}
+          </div>
+        ) : (
+          <div className="empty-results">
+            <span>⌕</span>
+            <h3>No finds just yet</h3>
+            <p>Try another search or choose a different category.</p>
+            <button
+              className="button-primary"
+              onClick={() => {
+                setSearch("");
+                setActiveCategory("All Products");
+              }}
+            >
+              Show all products
+            </button>
+          </div>
+        )}
+        <p className="demo-note">
+          Sample catalogue for design preview. Products, prices, reviews and
+          discounts are illustrative and are not live inventory.
+        </p>
+      </section>
 
-          <p className="demo-note">
-            Preview catalog only. Product prices, ratings, offers and
-            inventory must be verified against live marketplace data.
+      <section className="seller-banner" id="account">
+        <div className="seller-symbol">n.</div>
+        <div className="seller-copy">
+          <span>GROW WITH NOVACART</span>
+          <h2>Your products. A bigger stage.</h2>
+          <p>
+            Bring your collection to a marketplace made for discovery.
           </p>
-        </section>
-
-        <section className="seller-banner">
-          <div>
-            <span className="section-kicker">YOUR BUSINESS, YOUR NEXT CHAPTER</span>
-            <h2>Have something worth discovering?</h2>
-            <p>
-              Bring your products to NovaCart and connect with shoppers
-              looking for something different.
-            </p>
-          </div>
-          <a className="seller-button" href="/vendor">
-            Become a seller <span>→</span>
-          </a>
-          <span className="seller-decoration">✳</span>
-        </section>
-
-        <section className="newsletter">
-          <div>
-            <span className="section-kicker">YOUR NEXT FAVOURITE STARTS HERE</span>
-            <h2>There is more to discover.</h2>
-            <p>Explore collections and find something that feels like you.</p>
-          </div>
-          <a className="primary-button" href="#shop-products">
-            Start exploring <span>→</span>
-          </a>
-        </section>
-      </div>
+        </div>
+        <a href="mailto:sellers@novacart.example" className="seller-button">
+          Become a seller <span>↗</span>
+        </a>
+        <span className="seller-decoration">✳</span>
+      </section>
 
       <footer className="site-footer">
         <div className="footer-main">
           <div className="footer-brand">
-            <a className="brand" href="/">
-              <span className="brand-symbol">N</span>
-              <span>
-                nova<span className="brand-accent">cart</span>
+            <a href="#" className="brand">
+              <span className="brand-mark">n.</span>
+              <span className="brand-name">
+                nova<span>cart</span>
               </span>
             </a>
             <p>
-              A marketplace for distinctive fashion, everyday essentials,
-              and exciting discoveries.
+              A thoughtful mix of everyday essentials, fresh styles and
+              discoveries worth sharing.
             </p>
           </div>
-
           <div className="footer-column">
             <strong>Discover</strong>
-            <a href="#shop-products">Shop all</a>
             <a href="#categories">Categories</a>
-            <a href="#deals">Deals and offers</a>
+            <a href="#products">Popular finds</a>
+            <a href="#deals">Deals & offers</a>
           </div>
-
           <div className="footer-column">
-            <strong>Your account</strong>
-            <a href="/account">My account</a>
-            <a href="/orders">My orders</a>
-            <a href="#shop-products">Shopping</a>
+            <strong>Sell with us</strong>
+            <a href="#account">Become a seller</a>
+            <a href="mailto:sellers@novacart.example">Seller enquiries</a>
           </div>
-
-          <div className="footer-column">
-            <strong>Sell on NovaCart</strong>
-            <a href="/vendor">Seller portal</a>
-            <a href="/vendor/register">Become a seller</a>
-          </div>
-        </div>
-
-        <div className="footer-bottom">
-          <span>© 2026 NovaCart. All rights reserved.</span>
-          <span>Discover more. Shop differently.</span>
-        </div>
-      </footer>
-    </main>
-  );
-}
+          <div className
